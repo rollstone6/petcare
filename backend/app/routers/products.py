@@ -1,5 +1,6 @@
 """宠物宝 (PetCare) — 产品 API"""
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session, joinedload
 from typing import Optional
 from app.database import get_db
@@ -11,6 +12,7 @@ router = APIRouter(prefix="/products", tags=["产品"])
 
 
 @router.get("", response_model=schemas.ApiResponse)
+@cache(expire=300)  # 缓存5分钟
 def search_products(
     q: Optional[str] = Query("", description="搜索关键词"),
     category_id: Optional[int] = None,

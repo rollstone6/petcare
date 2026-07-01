@@ -2,6 +2,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
 from app.config import settings
 from app.database import engine, Base
 from app.routers import products, ingredients, brands, categories, breeds, users, favorites, ai, records, schedules, reviews, health, pets
@@ -15,6 +17,11 @@ app = FastAPI(
     redoc_url=None,
     openapi_url="/openapi.json" if settings.debug else None,
 )
+
+# 初始化缓存 (5分钟默认过期)
+@app.on_event("startup")
+async def startup():
+    FastAPICache.init(InMemoryBackend(), prefix="petcare-cache")
 
 # CORS: 仅允许配置的来源
 origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
