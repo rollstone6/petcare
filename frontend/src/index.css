@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 全局样式 */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 安全评分颜色 */
+.safety-5 { color: #059669; }
+.safety-4 { color: #10B981; }
+.safety-3 { color: #F59E0B; }
+.safety-2 { color: #F97316; }
+.safety-1 { color: #EF4444; }
+.bg-safety-5 { background: #059669; }
+.bg-safety-4 { background: #10B981; }
+.bg-safety-3 { background: #F59E0B; }
+.bg-safety-2 { background: #F97316; }
+.bg-safety-1 { background: #EF4444; }
+
+/* 底部导航安全区 */
+.safe-bottom {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+}
+
+/* 触摸优化 */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* 滚动隐藏 */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 淡入动画 */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn 0.3s ease-out; }

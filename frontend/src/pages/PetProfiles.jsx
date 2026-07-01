@@ -1,0 +1,296 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { api } from '../api/client'
+
+export default function PetProfiles() {
+  const navigate = useNavigate()
+  const [pets, setPets] = useState([])
+  const [breeds, setBreeds] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editingPet, setEditingPet] = useState(null)
+  const [formData, setFormData] = useState({
+    pet_name: '',
+    breed_id: '',
+    age: '',
+    gender: '',
+    weight: '',
+    birthday: '',
+  })
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  const loadData = async () => {
+    try {
+      const [petsData, breedsData] = await Promise.all([
+        api.getPets(),
+        api.getBreeds(),
+      ])
+      setPets(petsData.items || [])
+      setBreeds(breedsData.items || [])
+    } catch (err) {
+      console.error('加载数据失败:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    try {
+      const data = {
+        ...formData,
+        breed_id: formData.breed_id ? parseInt(formData.breed_id) : null,
+        weight: formData.weight ? parseFloat(formData.weight) : null,
+      }
+
+      if (editingPet) {
+        await api.updatePet(editingPet.id, data)
+      } else {
+        await api.createPet(data)
+      }
+      
+      setShowForm(false)
+      setEditingPet(null)
+      setFormData({ pet_name: '', breed_id: '', age: '', gender: '', weight: '' })
+      loadData()
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
+  const handleEdit = (pet) => {
+    setEditingPet(pet)
+    setFormData({
+      pet_name: pet.pet_name,
+      breed_id: pet.breed?.id || '',
+      age: pet.age || '',
+      gender: pet.gender || '',
+      weight: pet.weight?.toString() || '',
+      birthday: pet.birthday || '',
+    })
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('确定删除这个宠物档案吗？')) return
+    try {
+      await api.deletePet(id)
+      loadData()
+    } catch (err) {
+      alert(err.message)
+    }
+  }
+
+  const getGenderIcon = (gender) => {
+    if (gender === '公') return '♂️'
+    if (gender === '母') return '♀️'
+    return '🐾'
+  }
+
+  if (loading) {
+    return (
+      <div className="px-4 md:px-8 py-8">
+        <div className="max-w-2xl mx-auto animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/2" />
+          <div className="space-y-3">
+            <div className="h-24 bg-gray-200 rounded-2xl" />
+            <div className="h-24 bg-gray-200 rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="animate-fadeIn pb-4">
+      <div className="bg-white px-4 md:px-8 pt-6 md:pt-10 pb-4 sticky top-0 z-40 shadow-sm">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div>
+            <button onClick={() => navigate(-1)} className="text-gray-400 text-sm mb-2 hover:text-gray-600">
+              ← 返回
+            </button>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">🐱 品种档案</h1>
+            <p className="text-sm md:text-base text-gray-500 mt-1">管理你的宠物</p>
+          </div>
+          <button
+            onClick={() => {
+              setEditingPet(null)
+              setFormData({ pet_name: '', breed_id: '', age: '', gender: '', weight: '', birthday: '' })
+              setShowForm(true)
+            }}
+            className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
+          >
+            + 添加宠物
+          </button>
+        </div>
+      </div>
+
+      <div className="px-4 md:px-8 py-4">
+        <div className="max-w-2xl mx-auto space-y-3">
+          {pets.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
+              <div className="text-5xl mb-3">🐾</div>
+              <p className="text-gray-500 text-sm">还没有添加宠物</p>
+              <p className="text-gray-400 text-xs mt-1">点击右上角添加你的宠物档案</p>
+            </div>
+          ) : (
+            pets.map(pet => (
+              <div key={pet.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  {pet.breed?.image_url ? (
+                    <img
+                      src={pet.breed.image_url}
+                      alt={pet.breed.name}
+                      className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center text-3xl flex-shrink-0">
+                      {pet.breed?.species === '猫' ? '🐱' : '🐶'}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-semibold text-gray-900">{pet.pet_name}</h3>
+                      <span className="text-sm">{getGenderIcon(pet.gender)}</span>
+                    </div>
+                    {pet.breed && (
+                      <p className="text-sm text-gray-600">{pet.breed.name} · {pet.breed.size}</p>
+                    )}
+                    <div className="flex gap-3 mt-2 text-xs text-gray-500">
+                      {pet.age_category && (
+                        <span className={`px-2 py-0.5 rounded-full ${
+                          pet.age_category === '幼崽' ? 'bg-pink-100 text-pink-600' :
+                          pet.age_category === '幼年' ? 'bg-blue-100 text-blue-600' :
+                          pet.age_category === '成年' ? 'bg-green-100 text-green-600' :
+                          'bg-purple-100 text-purple-600'
+                        }`}>
+                          {pet.age_category}
+                        </span>
+                      )}
+                      {pet.weight && <span>{pet.weight}kg</span>}
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEdit(pet)}
+                      className="text-gray-400 hover:text-primary p-1.5 text-sm"
+                      title="编辑"
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      onClick={() => handleDelete(pet.id)}
+                      className="text-gray-400 hover:text-red-500 p-1.5 text-sm"
+                      title="删除"
+                    >
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              {editingPet ? '编辑宠物' : '添加宠物'}
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">名字 *</label>
+                <input
+                  type="text"
+                  value={formData.pet_name}
+                  onChange={e => setFormData({ ...formData, pet_name: e.target.value })}
+                  placeholder="宠物名字"
+                  required
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">品种</label>
+                <select
+                  value={formData.breed_id}
+                  onChange={e => setFormData({ ...formData, breed_id: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white"
+                >
+                  <option value="">选择品种（可选）</option>
+                  {breeds.map(b => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">生日 🎂</label>
+                <input
+                  type="date"
+                  value={formData.birthday}
+                  onChange={e => setFormData({ ...formData, birthday: e.target.value })}
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary"
+                />
+                {formData.birthday && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {(() => {
+                      const birth = new Date(formData.birthday)
+                      const now = new Date()
+                      const years = now.getFullYear() - birth.getFullYear()
+                      const months = now.getMonth() - birth.getMonth()
+                      const totalMonths = years * 12 + months
+                      if (totalMonths < 12) {
+                        return `${totalMonths} 个月`
+                      } else {
+                        const y = Math.floor(totalMonths / 12)
+                        const m = totalMonths % 12
+                        return `${y} 岁${m > 0 ? ` ${m} 个月` : ''}`
+                      }
+                    })()}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">性别</label>
+                <select
+                  value={formData.gender}
+                  onChange={e => setFormData({ ...formData, gender: e.target.value })}
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white"
+                >
+                  <option value="">未知</option>
+                  <option value="公">公</option>
+                  <option value="母">母</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">体重 (kg)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={formData.weight}
+                  onChange={e => setFormData({ ...formData, weight: e.target.value })}
+                  placeholder="如：5.5"
+                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-2.5 rounded-xl font-medium text-sm hover:bg-primary/90 transition-colors"
+              >
+                {editingPet ? '保存修改' : '添加宠物'}
+              </button>
+            </form>
+            <button onClick={() => setShowForm(false)} className="w-full text-center text-sm text-gray-400 mt-3">
+              取消
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
