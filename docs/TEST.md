@@ -1,6 +1,6 @@
-# 宠物宝（PetCare）— 测试文档 v2.0
+# 宠物宝（PetCare）— 测试文档 v3.0
 
-> 版本：v2.0 | 最后更新：2026-06-23
+> 版本：v3.0 | 最后更新：2026-07-02
 
 ---
 
@@ -19,29 +19,62 @@
 ## 2. API 测试用例
 
 ### 2.1 产品搜索
-- [x] GET /api/products — 返回16条产品，按评分降序
-- [ ] GET /api/products?q=驱虫 — 搜索"驱虫"返回驱虫药
-- [ ] GET /api/products?type=药品 — 筛选药品
-- [ ] GET /api/products?category_id=1 — 按品类筛选
-- [ ] GET /api/products?page=2 — 分页
+- [x] GET /api/products — 返回186个产品，按评分降序
+- [x] GET /api/products?q=驱虫 — 搜索"驱虫"返回驱虫药
+- [x] GET /api/products?type=药品 — 筛选药品（71个）
+- [x] GET /api/products?category_id=1 — 按品类筛选
+- [x] GET /api/products?page=2 — 分页
+- [x] GET /api/products?species=猫 — 按物种筛选
+- [x] GET /api/products?target_size=小型 — 按体型筛选
+- [x] GET /api/products?target_age=幼年 — 按年龄筛选
 
 ### 2.2 产品详情
 - [x] GET /api/products/1 — 返回大宠爱完整信息
-- [x] 包含品牌、品类、成分列表
-- [ ] GET /api/products/999 — 返回 404
+- [x] 包含品牌、品类、成分列表、target_size、target_age
+- [x] GET /api/products/999 — 返回 404
 
 ### 2.3 成分查询
 - [x] GET /api/ingredients — 返回31种成分
-- [ ] GET /api/ingredients/1 — 成分详情含关联产品
+- [x] GET /api/ingredients/1 — 成分详情含关联产品
 
 ### 2.4 品种
-- [x] GET /api/breeds?species=猫 — 返回猫品种
-- [ ] GET /api/breeds/15 — 英短详情
-- [ ] GET /api/breeds/15/products — 英短推荐产品
+- [x] GET /api/breeds?species=猫 — 返回28个猫品种
+- [x] GET /api/breeds?species=狗 — 返回34个狗品种
+- [x] GET /api/breeds/15 — 英短详情（含size字段）
+- [x] GET /api/breeds/15/products — 英短推荐产品（基于体型智能关联）
 
 ### 2.5 品牌/品类
-- [x] GET /api/brands — 返回15个品牌
-- [x] GET /api/categories — 返回18个品类
+- [x] GET /api/brands — 返回52个品牌
+- [x] GET /api/categories — 返回40个品类
+
+### 2.6 用户系统
+- [x] POST /api/users/register — 注册新用户
+- [x] POST /api/users/login — 登录返回JWT
+- [x] GET /api/users/me — 获取用户信息（需Bearer token）
+- [x] PUT /api/users/me — 更新用户信息
+
+### 2.7 收藏功能
+- [x] GET /api/favorites — 获取收藏列表（需认证）
+- [x] POST /api/favorites — 添加收藏
+- [x] DELETE /api/favorites/{id} — 取消收藏
+
+### 2.8 评价功能
+- [x] GET /api/products/{id}/reviews — 获取产品评价
+- [x] POST /api/products/{id}/reviews — 发表评价（需认证）
+
+### 2.9 健康记录
+- [x] GET /api/records — 获取健康记录列表
+- [x] POST /api/records — 添加健康记录
+- [x] DELETE /api/records/{id} — 删除健康记录
+
+### 2.10 日程提醒
+- [x] GET /api/schedules — 获取日程列表
+- [x] POST /api/schedules — 创建日程
+- [x] PUT /api/schedules/{id} — 更新日程
+- [x] DELETE /api/schedules/{id} — 删除日程
+
+### 2.11 AI 问答
+- [x] POST /api/ai/chat — AI 成分问答（需认证）
 
 ---
 

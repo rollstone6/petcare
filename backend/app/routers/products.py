@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import or_
 from typing import Optional
 from app.database import get_db
 from app import models, schemas
@@ -29,7 +30,17 @@ def search_products(
     )
 
     if q:
-        query = query.filter(models.Product.name.contains(q))
+        # 模糊搜索：同时匹配产品名、品牌名、品类名、成分名
+        query = query.outerjoin(models.Brand).outerjoin(models.Category).outerjoin(
+            models.product_ingredient
+        ).outerjoin(models.Ingredient).filter(
+            or_(
+                models.Product.name.contains(q),
+                models.Brand.name.contains(q),
+                models.Category.name.contains(q),
+                models.Ingredient.name.contains(q),
+            )
+        ).group_by(models.Product.id)
     if category_id:
         query = query.filter(models.Product.category_id == category_id)
     if brand_id:
@@ -56,6 +67,9 @@ def search_products(
             type=p.type,
             safety_score=p.safety_score,
             image_url=p.image_url,
+            suitable_species=p.suitable_species,
+            target_size=p.target_size,
+            target_age=p.target_age,
         ))
 
     return schemas.ApiResponse(data={

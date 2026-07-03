@@ -67,6 +67,8 @@ class ProductBase(BaseModel):
     image_url: Optional[str] = ""
     usage_guide: Optional[str] = ""
     suitable_species: Optional[str] = "猫狗"
+    target_size: Optional[str] = "全部"
+    target_age: Optional[str] = "全部"
 
 class ProductCreate(ProductBase):
     pass
@@ -79,6 +81,9 @@ class ProductListItem(BaseModel):
     type: str
     safety_score: float
     image_url: Optional[str] = ""
+    suitable_species: Optional[str] = "猫狗"
+    target_size: Optional[str] = "全部"
+    target_age: Optional[str] = "全部"
 
 class ProductDetail(ProductBase):
     id: int

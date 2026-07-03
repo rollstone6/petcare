@@ -90,21 +90,28 @@ backend/
 
 ## 4. 数据库设计
 
-### 现有表
-- `brands` — 品牌
-- `categories` — 品类
-- `ingredients` — 成分
-- `products` — 产品
-- `pet_breeds` — 品种
+### 现有表（已实现）
+- `brands` — 品牌（52个）
+- `categories` — 品类（40个：药品17 + 食品7 + 保健品9）
+- `ingredients` — 成分（31种药品成分）
+- `products` — 产品（186个，含target_size/target_age字段）
+- `pet_breeds` — 品种（62个：狗34 + 猫28，含size/age_stage字段）
 - `product_ingredient` — 产品-成分关联
-- `breed_product` — 品种-产品推荐
-
-### 待添加表（Phase 4）
+- `breed_product` — 品种-产品推荐（9149条，按物种+体型智能关联）
 - `users` — 用户
 - `favorites` — 收藏
 - `reviews` — 评价
 - `browse_history` — 浏览历史
-- `pet_profiles` — 用户品种档案
+- `pet_profiles` — 用户宠物档案
+- `health_records` — 健康记录（便便/饮水/呕吐/体重等）
+- `schedules` — 日程提醒（驱虫/疫苗/体检）
+
+### 关键字段说明
+- `Product.suitable_species` — 物种：猫/狗/猫狗（标准化，无变体）
+- `Product.target_size` — 体型：全部/小型/中型/大型/小型中型/中大型
+- `Product.target_age` — 年龄：全部/幼年/成年/老年/成年老年
+- `PetBreed.size` — 品种体型：小型/中型/大型（狗），中型（猫）
+- `Product.approval_number` — JD:{wareId}（京东商品溯源）
 
 ---
 

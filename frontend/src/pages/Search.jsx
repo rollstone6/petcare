@@ -2,10 +2,12 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import QuickTags from '../components/QuickTags'
+import CategoryGrid from '../components/CategoryGrid'
 import { api } from '../api/client'
 import { useApp } from '../context/AppContext'
 
 const typeTabs = ['全部', '药品', '食品', '保健品']
+const typeMap = { '药品': '药品', '食品': '食品', '保健品': '保健品' }
 const sortOptions = [
   { key: 'score', label: '评分最高', icon: '⭐' },
   { key: 'name', label: '名称', icon: '🔤' },
@@ -43,11 +45,39 @@ export default function Search() {
   const [selected, setSelected] = useState([])
   const [hasSearched, setHasSearched] = useState(!!searchParams.get('q') || !!searchParams.get('type'))
 
+  // 品类筛选
+  const [categories, setCategories] = useState([])
+  const [activeCategoryId, setActiveCategoryId] = useState(null)
+
+  // 品牌筛选
+  const [brands, setBrands] = useState([])
+  const [activeBrandId, setActiveBrandId] = useState(null)
+  const [showAllBrands, setShowAllBrands] = useState(false)
+
   // 搜索联想建议
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const debounceRef = useRef(null)
   const inputRef = useRef(null)
+
+  // 加载品类列表（随类型 tab 变化）
+  useEffect(() => {
+    const typeVal = activeType === '全部' ? '' : activeType
+    api.getCategories(typeVal).then(data => {
+      setCategories(data.items || [])
+      // 切换类型时重置品类选择
+      setActiveCategoryId(null)
+    }).catch(() => setCategories([]))
+  }, [activeType])
+
+  // 加载品牌列表（随类型 tab 变化）
+  useEffect(() => {
+    const typeVal = activeType === '全部' ? '' : activeType
+    api.getBrands(typeVal).then(data => {
+      setBrands(data.items || [])
+      setActiveBrandId(null)
+    }).catch(() => setBrands([]))
+  }, [activeType])
 
   // 监听 URL 参数变化
   useEffect(() => {
@@ -62,13 +92,15 @@ export default function Search() {
     }
   }, [searchParams])
 
-  const doSearch = useCallback(async (q, t, s, p, append = false) => {
+  const doSearch = useCallback(async (q, t, s, p, catId, brandId, append = false) => {
     if (append) setLoadingMore(true)
     else setLoading(true)
     try {
       const params = { page_size: PAGE_SIZE, page: p, sort: s }
       if (q) params.q = q
       if (t && t !== '全部') params.type = t
+      if (catId) params.category_id = catId
+      if (brandId) params.brand_id = brandId
       const data = await api.searchProducts(params)
       const items = data.items || []
       setResults(prev => append ? [...prev, ...items] : items)
@@ -83,10 +115,10 @@ export default function Search() {
     }
   }, [])
 
-  // 搜索触发器（query/type/sort 变化且是首页时重新搜索）
+  // 搜索触发器（query/type/sort/page/activeCategoryId/activeBrandId 变化且是首页时重新搜索）
   useEffect(() => {
-    if (query || hasSearched) doSearch(query, type, sort, page, false)
-  }, [query, type, sort, hasSearched, doSearch, page])
+    if (query || hasSearched) doSearch(query, type, sort, page, activeCategoryId, activeBrandId, false)
+  }, [query, type, sort, hasSearched, doSearch, page, activeCategoryId, activeBrandId])
 
   // 输入联想（debounce）
   useEffect(() => {
@@ -113,12 +145,26 @@ export default function Search() {
     setPage(1)
     setSearchParams({ q: query, type })
     setShowSuggestions(false)
-    doSearch(query, type, sort, 1, false)
+    doSearch(query, type, sort, 1, activeCategoryId, activeBrandId, false)
   }
 
   const handleTypeChange = (t) => {
     setType(t === '全部' ? '' : t)
     setActiveType(t)
+    setActiveCategoryId(null)
+    setActiveBrandId(null)
+    setHasSearched(true)
+    setPage(1)
+  }
+
+  const handleCategoryChange = (catId) => {
+    setActiveCategoryId(catId === activeCategoryId ? null : catId)
+    setHasSearched(true)
+    setPage(1)
+  }
+
+  const handleBrandChange = (brandId) => {
+    setActiveBrandId(brandId === activeBrandId ? null : brandId)
     setHasSearched(true)
     setPage(1)
   }
@@ -126,7 +172,7 @@ export default function Search() {
   const loadMore = () => {
     const next = page + 1
     setPage(next)
-    doSearch(query, type, sort, next, true)
+    doSearch(query, type, sort, next, activeCategoryId, activeBrandId, true)
   }
 
   const toggleSelect = (id) => {
@@ -141,7 +187,7 @@ export default function Search() {
     setHasSearched(true)
     setPage(1)
     setSearchParams({ q: s, type })
-    doSearch(s, type, sort, 1, false)
+    doSearch(s, type, sort, 1, activeCategoryId, activeBrandId, false)
   }
 
   const selectedProducts = results.filter(p => selected.includes(p.id))
@@ -221,24 +267,163 @@ export default function Search() {
         </div>
       </div>
 
-      {/* 类型筛选 */}
-      <div className="px-3 md:px-8 pt-3 pb-1">
-        <div className="max-w-4xl mx-auto flex gap-2 overflow-x-auto scrollbar-hide">
-          {typeTabs.map(t => (
-            <button
-              key={t}
-              onClick={() => handleTypeChange(t)}
-              className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-                t === activeType
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'bg-white text-gray-600 border border-gray-200'
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+      {/* 搜索历史 - 紧跟搜索框 */}
+      {!query && !compareMode && state.searchHistory.length > 0 && (
+        <div className="px-3 md:px-8 pt-3 mb-2">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-500">🕐 搜索历史</span>
+              <button onClick={() => dispatch({ type: 'CLEAR_HISTORY' })} className="text-xs text-gray-400 hover:text-red-400 transition-colors">清除</button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {state.searchHistory.map((h, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setQuery(h)
+                    setHasSearched(true)
+                    setPage(1)
+                    setSearchParams({ q: h, type })
+                    dispatch({ type: 'ADD_HISTORY', payload: h })
+                  }}
+                  className="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full text-sm hover:bg-gray-200 transition-colors"
+                >
+                  {h}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* 快捷标签 - 搜索历史下方 */}
+      {!query && !hasSearched && !compareMode && (
+        <div className="px-3 md:px-8 mb-4">
+          <div className="max-w-4xl mx-auto">
+            <QuickTags mode="search" />
+          </div>
+        </div>
+      )}
+
+      {/* 类型筛选 */}
+      {hasSearched && (
+        <div className="px-3 md:px-8 pt-3 pb-1">
+          <div className="max-w-4xl mx-auto flex gap-2 overflow-x-auto scrollbar-hide">
+            {typeTabs.map(t => (
+              <button
+                key={t}
+                onClick={() => handleTypeChange(t)}
+                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+                  t === activeType
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-white text-gray-600 border border-gray-200'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 品类筛选 - 网格布局优化版 */}
+      {hasSearched && categories.filter(c => c.product_count > 0).length > 0 && (
+        <div className="px-3 md:px-8 pt-1 pb-2">
+          <div className="max-w-4xl mx-auto">
+            <CategoryGrid
+              categories={categories.filter(c => c.product_count > 0)}
+              activeCategoryId={activeCategoryId}
+              onCategoryChange={handleCategoryChange}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 品牌筛选 - 横向滚动，带展开/收起 */}
+      {hasSearched && brands.length > 0 && (
+        <div className="px-3 md:px-8 pt-1 pb-2">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs text-gray-500 font-medium">品牌</span>
+              {brands.length > 8 && (
+                <button
+                  onClick={() => setShowAllBrands(!showAllBrands)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  {showAllBrands ? '收起' : `全部 ${brands.length}`}
+                </button>
+              )}
+              {activeBrandId && (
+                <button
+                  onClick={() => { setActiveBrandId(null); setHasSearched(true); setPage(1) }}
+                  className="text-xs text-red-400 hover:text-red-500 ml-auto"
+                >
+                  清除品牌 ✕
+                </button>
+              )}
+            </div>
+            <div className={`flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 ${showAllBrands ? 'flex-wrap' : ''}`}>
+              {(showAllBrands ? brands : brands.slice(0, 8)).map(b => (
+                <button
+                  key={b.id}
+                  onClick={() => handleBrandChange(b.id)}
+                  className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors shrink-0 ${
+                    activeBrandId === b.id
+                      ? 'bg-purple-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 筛选摘要栏 - 显示当前激活的筛选条件 */}
+      {hasSearched && (activeCategoryId !== null || activeBrandId !== null) && (
+        <div className="px-3 md:px-8 py-2">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-gray-500">当前筛选:</span>
+              {activeCategoryId !== null && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                  {categories.find(c => c.id === activeCategoryId)?.name}
+                  <button
+                    onClick={() => handleCategoryChange(null)}
+                    className="hover:text-blue-900 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              {activeBrandId !== null && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-purple-100 text-purple-700">
+                  {brands.find(b => b.id === activeBrandId)?.name}
+                  <button
+                    onClick={() => handleBrandChange(null)}
+                    className="hover:text-purple-900 transition-colors"
+                  >
+                    ✕
+                  </button>
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  setActiveCategoryId(null)
+                  setActiveBrandId(null)
+                  setHasSearched(true)
+                  setPage(1)
+                }}
+                className="text-xs text-gray-400 hover:text-red-500 transition-colors ml-auto"
+              >
+                清除所有筛选
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 排序条 - 搜索后才显示 */}
       {hasSearched && results.length > 1 && !compareMode && (
@@ -258,44 +443,6 @@ export default function Search() {
                 {o.icon} {o.label}
               </button>
             ))}
-          </div>
-        </div>
-      )}
-
-      {/* 搜索历史 */}
-      {!query && !compareMode && state.searchHistory.length > 0 && (
-        <div className="px-3 md:px-8 mb-3">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-500">搜索历史</span>
-              <button onClick={() => dispatch({ type: 'CLEAR_HISTORY' })} className="text-xs text-gray-400">清除</button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {state.searchHistory.map((h, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setQuery(h)
-                    setHasSearched(true)
-                    setPage(1)
-                    setSearchParams({ q: h, type })
-                    dispatch({ type: 'ADD_HISTORY', payload: h })
-                  }}
-                  className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm hover:bg-gray-200 transition-colors"
-                >
-                  {h}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 快捷标签 */}
-      {!query && !hasSearched && !compareMode && (
-        <div className="px-3 md:px-8 mb-4">
-          <div className="max-w-4xl mx-auto">
-            <QuickTags mode="search" />
           </div>
         </div>
       )}

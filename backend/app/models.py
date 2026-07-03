@@ -95,6 +95,8 @@ class Product(Base):
     image_url = Column(String(500), default="")
     usage_guide = Column(Text, default="", comment="使用说明")
     suitable_species = Column(String(50), default="猫狗", comment="适用物种")
+    target_size = Column(String(50), default="全部", comment="适用体型：全部/小型/中型/大型/小型中型/中大型")
+    target_age = Column(String(50), default="全部", comment="适用年龄：全部/幼年/成年/老年/成年老年")
     created_at = Column(DateTime, default=func.now())
 
     brand = relationship("Brand", back_populates="products")
