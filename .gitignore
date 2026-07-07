@@ -4,6 +4,7 @@ __pycache__/
 *.egg-info/
 venv/
 .venv/
+browseract-env/
 *.db
 *.sqlite3
 
@@ -32,3 +33,7 @@ backend/*.db
 
 # Build artifacts
 frontend/dist/
+
+# Backup
+*/backup*/
+*_backup*/
