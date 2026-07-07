@@ -111,13 +111,18 @@ export default function Home() {
                   className="flex flex-col items-center bg-white rounded-xl md:rounded-2xl p-2 md:p-4 shadow-sm hover:shadow-md transition-all active:scale-95 touch-target"
                 >
                   <div className="w-full aspect-square rounded-lg md:rounded-xl overflow-hidden bg-gray-100 mb-1.5 md:mb-2">
-                    <img
-                      src={b.image_url || '/placeholder-breed.svg'}
-                      alt={b.name}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.style.display = 'none' }}
-                    />
+                    {b.image_url ? (
+                      <img
+                        src={b.image_url}
+                        alt={b.name}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-2xl">
+                        {b.species === '猫' ? '🐱' : b.species === '狗' ? '🐶' : '🐾'}
+                      </div>
+                    )}
                   </div>
                   <span className="text-xs md:text-sm font-medium text-gray-800 text-center line-clamp-1">{b.name}</span>
                   <span className="text-[10px] md:text-xs text-gray-400">{b.species}</span>

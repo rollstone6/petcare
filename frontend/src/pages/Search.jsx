@@ -1,8 +1,13 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { FreeMode, Mousewheel } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/free-mode'
 import ProductCard from '../components/ProductCard'
 import QuickTags from '../components/QuickTags'
 import CategoryGrid from '../components/CategoryGrid'
+import ProductSuggestion from '../components/ProductSuggestion'
 import { api } from '../api/client'
 import { useApp } from '../context/AppContext'
 
@@ -44,15 +49,28 @@ export default function Search() {
   const [compareMode, setCompareMode] = useState(false)
   const [selected, setSelected] = useState([])
   const [hasSearched, setHasSearched] = useState(!!searchParams.get('q') || !!searchParams.get('type'))
+  const [showSuggestion, setShowSuggestion] = useState(false)
 
-  // 品类筛选
-  const [categories, setCategories] = useState([])
+  // 品类筛选 — 分离元数据和计数，避免竞态
+  const [categoryMeta, setCategoryMeta] = useState([])  // {id, name, icon, ...}
+  const [categoryCounts, setCategoryCounts] = useState({})  // {id: count}
   const [activeCategoryId, setActiveCategoryId] = useState(null)
 
-  // 品牌筛选
-  const [brands, setBrands] = useState([])
+  // 品牌筛选 — 分离元数据和计数，避免竞态
+  const [brandMeta, setBrandMeta] = useState([])  // {id, name, ...}
+  const [brandCounts, setBrandCounts] = useState({})  // {id: count}
   const [activeBrandId, setActiveBrandId] = useState(null)
   const [showAllBrands, setShowAllBrands] = useState(false)
+
+  // useMemo 合并元数据和计数（单一数据源）
+  const categories = useMemo(() =>
+    categoryMeta.map(c => ({ ...c, product_count: categoryCounts[c.id] || 0 })),
+    [categoryMeta, categoryCounts]
+  )
+  const brands = useMemo(() =>
+    brandMeta.map(b => ({ ...b, product_count: brandCounts[b.id] || 0 })),
+    [brandMeta, brandCounts]
+  )
 
   // 搜索联想建议
   const [suggestions, setSuggestions] = useState([])
@@ -64,19 +82,18 @@ export default function Search() {
   useEffect(() => {
     const typeVal = activeType === '全部' ? '' : activeType
     api.getCategories(typeVal).then(data => {
-      setCategories(data.items || [])
-      // 切换类型时重置品类选择
+      setCategoryMeta(data.items || [])
       setActiveCategoryId(null)
-    }).catch(() => setCategories([]))
+    }).catch(() => setCategoryMeta([]))
   }, [activeType])
 
   // 加载品牌列表（随类型 tab 变化）
   useEffect(() => {
     const typeVal = activeType === '全部' ? '' : activeType
     api.getBrands(typeVal).then(data => {
-      setBrands(data.items || [])
+      setBrandMeta(data.items || [])
       setActiveBrandId(null)
-    }).catch(() => setBrands([]))
+    }).catch(() => setBrandMeta([]))
   }, [activeType])
 
   // 监听 URL 参数变化
@@ -86,7 +103,7 @@ export default function Search() {
     if (urlQ !== query || urlT !== type) {
       setQuery(urlQ)
       setType(urlT)
-      setActiveType(urlT && typeTabs.includes(urlT) ? urlT : urlQ ? '全部' : typeTabs[0])
+      setActiveType(typeTabs.includes(urlT) ? urlT : '全部')
       setHasSearched(true)
       setPage(1)
     }
@@ -106,6 +123,14 @@ export default function Search() {
       setResults(prev => append ? [...prev, ...items] : items)
       setTotal(data.total || 0)
       setHasMore((data.page || 1) * PAGE_SIZE < (data.total || 0))
+      
+      // 使用后端返回的统计数据更新品类和品牌数量（独立状态，无竞态）
+      if (!append && data.category_stats) {
+        setCategoryCounts(data.category_stats)
+      }
+      if (!append && data.brand_stats) {
+        setBrandCounts(data.brand_stats)
+      }
     } catch (e) {
       console.error(e)
       if (!append) setResults([])
@@ -211,6 +236,9 @@ export default function Search() {
     return d.ingredients.slice(0, 5).map(i => i.name)
   }
 
+  // 过滤出有产品数量的品牌
+  const activeBrands = brands.filter(b => b.product_count > 0)
+
   return (
     <div className="animate-fadeIn">
       {/* 搜索栏 - 移动端紧凑版 */}
@@ -308,20 +336,30 @@ export default function Search() {
       {/* 类型筛选 */}
       {hasSearched && (
         <div className="px-3 md:px-8 pt-3 pb-1">
-          <div className="max-w-4xl mx-auto flex gap-2 overflow-x-auto scrollbar-hide">
-            {typeTabs.map(t => (
-              <button
-                key={t}
-                onClick={() => handleTypeChange(t)}
-                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
-                  t === activeType
-                    ? 'bg-primary text-white shadow-sm'
-                    : 'bg-white text-gray-600 border border-gray-200'
-                }`}
-              >
-                {t}
-              </button>
-            ))}
+          <div className="max-w-4xl mx-auto">
+            <Swiper
+              modules={[FreeMode, Mousewheel]}
+              slidesPerView="auto"
+              freeMode={true}
+              mousewheel={true}
+              spaceBetween={8}
+              className="filter-swiper"
+            >
+              {typeTabs.map(t => (
+                <SwiperSlide key={t} className="!w-auto">
+                  <button
+                    onClick={() => handleTypeChange(t)}
+                    className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+                      t === activeType
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-white text-gray-600 border border-gray-200'
+                    }`}
+                  >
+                    {t}
+                  </button>
+                </SwiperSlide>
+              ))}
+            </Swiper>
           </div>
         </div>
       )}
@@ -340,17 +378,17 @@ export default function Search() {
       )}
 
       {/* 品牌筛选 - 横向滚动，带展开/收起 */}
-      {hasSearched && brands.length > 0 && (
+      {hasSearched && activeBrands.length > 0 && (
         <div className="px-3 md:px-8 pt-1 pb-2">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs text-gray-500 font-medium">品牌</span>
-              {brands.length > 8 && (
+              {activeBrands.length > 8 && (
                 <button
                   onClick={() => setShowAllBrands(!showAllBrands)}
                   className="text-xs text-primary hover:underline"
                 >
-                  {showAllBrands ? '收起' : `全部 ${brands.length}`}
+                  {showAllBrands ? '收起' : `全部 ${activeBrands.length}`}
                 </button>
               )}
               {activeBrandId && (
@@ -362,21 +400,32 @@ export default function Search() {
                 </button>
               )}
             </div>
-            <div className={`flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 ${showAllBrands ? 'flex-wrap' : ''}`}>
-              {(showAllBrands ? brands : brands.slice(0, 8)).map(b => (
-                <button
-                  key={b.id}
-                  onClick={() => handleBrandChange(b.id)}
-                  className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors shrink-0 ${
-                    activeBrandId === b.id
-                      ? 'bg-purple-500 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {b.name}
-                </button>
+            <Swiper
+              modules={[FreeMode, Mousewheel]}
+              slidesPerView="auto"
+              freeMode={true}
+              mousewheel={true}
+              spaceBetween={6}
+              className="brand-filter-swiper"
+            >
+              {activeBrands.map(b => (
+                <SwiperSlide key={b.id} className="!w-auto">
+                  <button
+                    onClick={() => handleBrandChange(b.id)}
+                    className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors shrink-0 ${
+                      activeBrandId === b.id
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {b.name}
+                    <span className={`ml-1 px-1 rounded-full text-[10px] ${
+                      activeBrandId === b.id ? 'bg-white/25' : 'bg-gray-200 text-gray-500'
+                    }`}>{b.product_count}</span>
+                  </button>
+                </SwiperSlide>
               ))}
-            </div>
+            </Swiper>
           </div>
         </div>
       )}
@@ -428,21 +477,33 @@ export default function Search() {
       {/* 排序条 - 搜索后才显示 */}
       {hasSearched && results.length > 1 && !compareMode && (
         <div className="px-3 md:px-8 py-2">
-          <div className="max-w-4xl mx-auto flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <span className="text-xs text-gray-400 shrink-0">排序</span>
-            {sortOptions.map(o => (
-              <button
-                key={o.key}
-                onClick={() => { setSort(o.key); setPage(1) }}
-                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
-                  sort === o.key
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-600'
-                }`}
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400 shrink-0">排序</span>
+              <Swiper
+                modules={[FreeMode, Mousewheel]}
+                slidesPerView="auto"
+                freeMode={true}
+                mousewheel={true}
+                spaceBetween={8}
+                className="sort-swiper"
               >
-                {o.icon} {o.label}
-              </button>
-            ))}
+                {sortOptions.map(o => (
+                  <SwiperSlide key={o.key} className="!w-auto">
+                    <button
+                      onClick={() => { setSort(o.key); setPage(1) }}
+                      className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
+                        sort === o.key
+                          ? 'bg-gray-900 text-white'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}
+                    >
+                      {o.icon} {o.label}
+                    </button>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
           </div>
         </div>
       )}
@@ -474,7 +535,7 @@ export default function Search() {
                     {selectedProducts.map(p => (
                       <th key={p.id} className="p-3 text-center font-medium text-gray-900 min-w-[110px]">
                         {p.image_url && (
-                          <img src={p.image_url} alt="" className="w-12 h-12 object-cover rounded-lg mx-auto mb-1.5" />
+                          <img src={p.image_url} alt="" loading="lazy" className="w-12 h-12 object-cover rounded-lg mx-auto mb-1.5" />
                         )}
                         <div className="truncate">{p.name}</div>
                       </th>
@@ -578,7 +639,7 @@ export default function Search() {
                         {selected.includes(p.id) && <span className="text-white text-xs">✓</span>}
                       </div>
                       {p.image_url && (
-                        <img src={p.image_url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                        <img src={p.image_url} alt="" loading="lazy" className="w-10 h-10 rounded-lg object-cover shrink-0" />
                       )}
                       <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); navigate(`/product/${p.id}`) }}>
                         <div className="text-sm font-medium text-gray-900 truncate">{p.name}</div>
@@ -610,10 +671,18 @@ export default function Search() {
               )}
 
               {results.length === 0 && (
-                <div className="text-center py-10 text-gray-400">
-                  <div className="text-4xl mb-2">🔍</div>
-                  <p>未找到相关产品</p>
-                  <p className="text-sm mt-1">试试其他关键词</p>
+                <div className="text-center py-10">
+                  <div className="text-5xl mb-3">🔍</div>
+                  <p className="text-gray-600 mb-2">未找到相关产品</p>
+                  <p className="text-sm text-gray-500 mb-4">试试其他关键词，或帮助我们收录这款产品</p>
+                  {query && (
+                    <button
+                      onClick={() => setShowSuggestion(true)}
+                      className="bg-primary text-white px-6 py-2.5 rounded-xl font-medium text-sm hover:bg-primary-dark transition-colors"
+                    >
+                      🎁 上传配料表，AI 帮你分析
+                    </button>
+                  )}
                 </div>
               )}
             </>
@@ -626,6 +695,14 @@ export default function Search() {
           )}
         </div>
       </div>
+
+      {/* UGC 产品建议弹窗 */}
+      {showSuggestion && (
+        <ProductSuggestion
+          searchQuery={query}
+          onClose={() => setShowSuggestion(false)}
+        />
+      )}
     </div>
   )
 }

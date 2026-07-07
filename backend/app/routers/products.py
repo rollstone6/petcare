@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi_cache.decorator import cache
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import Optional
 from app.database import get_db
 from app import models, schemas
@@ -49,6 +49,34 @@ def search_products(
         query = query.filter(models.Product.type == type)
 
     total = query.count()
+    
+    # 分面搜索统计：用子查询避免 group_by 堆叠问题
+    stats_sub = db.query(models.Product.id.label("pid"), models.Product.category_id, models.Product.brand_id)
+    if q:
+        stats_sub = stats_sub.outerjoin(models.Brand).outerjoin(models.Category).outerjoin(
+            models.product_ingredient
+        ).outerjoin(models.Ingredient).filter(
+            or_(
+                models.Product.name.contains(q),
+                models.Brand.name.contains(q),
+                models.Category.name.contains(q),
+                models.Ingredient.name.contains(q),
+            )
+        ).distinct()
+    if type:
+        stats_sub = stats_sub.filter(models.Product.type == type)
+    sub = stats_sub.subquery()
+    # 品类统计（排除 category_id 筛选，保留 brand_id）
+    cat_q = db.query(sub.c.category_id, func.count(sub.c.pid.distinct())).group_by(sub.c.category_id)
+    if brand_id:
+        cat_q = cat_q.filter(sub.c.brand_id == brand_id)
+    category_stats = dict(cat_q.all())
+    # 品牌统计（排除 brand_id 筛选，保留 category_id）
+    brand_q = db.query(sub.c.brand_id, func.count(sub.c.pid.distinct())).group_by(sub.c.brand_id)
+    if category_id:
+        brand_q = brand_q.filter(sub.c.category_id == category_id)
+    brand_stats = dict(brand_q.all())
+    
     if sort == "name":
         query = query.order_by(models.Product.name)
     elif sort == "newest":
@@ -77,6 +105,8 @@ def search_products(
         "total": total,
         "page": page,
         "page_size": page_size,
+        "category_stats": category_stats,
+        "brand_stats": brand_stats,
     })
 
 
@@ -104,11 +134,19 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     for pi in pi_records:
         ing = ingredients_data.get(pi.ingredient_id)
         if ing:
+            import json
+            risk_tags = []
+            if ing.risk_tags:
+                try:
+                    risk_tags = json.loads(ing.risk_tags)
+                except:
+                    risk_tags = []
             ingredients.append(schemas.ProductIngredient(
                 id=ing.id,
                 name=ing.name,
                 sort_order=pi.sort_order or 0,
                 function=ing.function,
+                risk_tags=risk_tags,
             ))
 
     return schemas.ApiResponse(data=schemas.ProductDetail(
@@ -137,3 +175,122 @@ def recalculate_scores(
     from app.scoring import recalculate_all_scores
     count = recalculate_all_scores(db)
     return {"code": 0, "data": {"updated": count}, "message": f"已更新 {count} 个产品的评分"}
+
+
+@router.get("/{product_id}/breed-compatibility", response_model=schemas.ApiResponse)
+def get_breed_compatibility(
+    product_id: int,
+    pet_id: Optional[int] = Query(None, description="宠物档案ID"),
+    db: Session = Depends(get_db),
+):
+    """计算产品与用户宠物的品种契合度"""
+    import json
+    
+    # 1. 获取产品
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="产品不存在")
+    
+    # 2. 获取宠物档案
+    pet = None
+    if pet_id:
+        pet = db.query(models.PetProfile).filter(models.PetProfile.id == pet_id).first()
+    
+    if not pet or not pet.breed_id:
+        # 没有绑定宠物或没有品种，返回默认安全评分
+        return schemas.ApiResponse(data={
+            "compatibility_score": None,
+            "risk_ingredients": [],
+            "warnings": [],
+            "message": "请先在「宠物档案」中绑定宠物品种，获取个性化契合度分析"
+        })
+    
+    # 3. 获取品种健康标签
+    breed = db.query(models.PetBreed).filter(models.PetBreed.id == pet.breed_id).first()
+    if not breed:
+        return schemas.ApiResponse(data={
+            "compatibility_score": None,
+            "risk_ingredients": [],
+            "warnings": [],
+            "message": "品种信息不存在"
+        })
+    
+    health_tags = []
+    if breed.health_tags:
+        try:
+            health_tags = json.loads(breed.health_tags)
+        except:
+            health_tags = []
+    
+    if not health_tags:
+        return schemas.ApiResponse(data={
+            "compatibility_score": None,
+            "risk_ingredients": [],
+            "warnings": [],
+            "message": f"{breed.name}暂无健康风险数据"
+        })
+    
+    # 4. 遍历产品成分，匹配风险
+    pi_records = db.query(models.product_ingredient).filter(
+        models.product_ingredient.c.product_id == product_id
+    ).all()
+    
+    ingredient_ids = [pi.ingredient_id for pi in pi_records]
+    ingredients_data = {}
+    if ingredient_ids:
+        ingredients = db.query(models.Ingredient).filter(models.Ingredient.id.in_(ingredient_ids)).all()
+        ingredients_data = {ing.id: ing for ing in ingredients}
+    
+    risk_ingredients = []
+    matched_health_tags = set()
+    
+    for pi in pi_records:
+        ing = ingredients_data.get(pi.ingredient_id)
+        if not ing or not ing.risk_tags:
+            continue
+        
+        try:
+            ing_risk_tags = json.loads(ing.risk_tags)
+        except:
+            continue
+        
+        # 找匹配的风险标签
+        overlapping = set(ing_risk_tags) & set(health_tags)
+        if overlapping:
+            matched_health_tags.update(overlapping)
+            risk_ingredients.append({
+                "id": ing.id,
+                "name": ing.name,
+                "function": ing.function or "",
+                "risk_tags": list(overlapping),
+                "all_risk_tags": ing_risk_tags,
+            })
+    
+    # 5. 计算契合度分数
+    # 基础分 100，每个风险成分扣 10-15 分
+    if not risk_ingredients:
+        compatibility_score = 100
+    else:
+        # 风险越多扣分越多，但保底 20 分
+        penalty = 0
+        for ri in risk_ingredients:
+            penalty += min(15, 8 + len(ri["risk_tags"]) * 3)
+        compatibility_score = max(20, 100 - penalty)
+    
+    # 6. 生成警告文案
+    warnings = []
+    for ri in risk_ingredients:
+        tags_str = "、".join(ri["risk_tags"])
+        warnings.append(
+            f"⚠️ {breed.name}易患{tags_str}，该产品含有「{ri['name']}」可能加重风险"
+        )
+    
+    return schemas.ApiResponse(data={
+        "compatibility_score": compatibility_score,
+        "pet_name": pet.pet_name,
+        "breed_name": breed.name,
+        "breed_health_tags": health_tags,
+        "risk_ingredients": risk_ingredients,
+        "warnings": warnings,
+        "matched_health_tags": list(matched_health_tags),
+    })

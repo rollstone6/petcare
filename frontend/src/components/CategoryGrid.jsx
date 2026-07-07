@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 // 品类图标映射
 const categoryIcons = {
@@ -46,9 +46,20 @@ export default function CategoryGrid({ categories, activeCategoryId, onCategoryC
   const [expanded, setExpanded] = useState(false)
   const MAX_VISIBLE = 6
 
+  // 按类型分组排序：药品(蓝) → 食品(黄) → 保健品(绿)，同色聚在一起
+  const typeOrder = { '药品': 0, '食品': 1, '保健品': 2 }
+  const sorted = useMemo(() =>
+    [...categories].sort((a, b) => {
+      const ta = typeOrder[a.type] ?? 9
+      const tb = typeOrder[b.type] ?? 9
+      return ta - tb
+    }),
+    [categories]
+  )
+
   // 只展示有产品的品类
-  const visible = expanded ? categories : categories.slice(0, MAX_VISIBLE)
-  const hasMore = categories.length > MAX_VISIBLE
+  const visible = expanded ? sorted : sorted.slice(0, MAX_VISIBLE)
+  const hasMore = sorted.length > MAX_VISIBLE
 
   return (
     <div>

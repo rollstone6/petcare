@@ -63,6 +63,7 @@ Phase 1 数据层 ✅ → Phase 2 后端 API ✅ → Phase 3 前端 ✅ → Phas
 - [x] 体型/年龄维度（Product新增target_size/target_age字段）
 - [x] 智能品种关联（按物种+体型过滤，小型犬商品仅关联11个小型犬品种）
 - [x] 数据管理规则文档（DATA_RULES.md）
+- [x] UGC 产品建议系统（搜索0结果时引导用户上传配料表，AI分析安全评分）
 
 ### ⏳ 待办
 

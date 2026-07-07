@@ -77,9 +77,24 @@ export const api = {
   getCategories: (type) => request(`/categories${type ? `?type=${type}` : ''}`),
 
   // 品种
-  getBreeds: (species) => request(`/breeds${species ? `?species=${species}` : ''}`),
+  getSpecies: () => request('/breeds/species'),
+  getBreeds: (species, sortBy = 'name', page = 1, pageSize = 100) => {
+    const params = new URLSearchParams()
+    if (species) params.append('species', species)
+    if (sortBy) params.append('sort_by', sortBy)
+    if (page > 1) params.append('page', String(page))
+    if (pageSize !== 100) params.append('page_size', String(pageSize))
+    const query = params.toString()
+    return request(`/breeds${query ? `?${query}` : ''}`)
+  },
   getBreed: (id) => request(`/breeds/${id}`),
   getBreedProducts: (id) => request(`/breeds/${id}/products`),
+
+  // 品种契合度
+  getBreedCompatibility: (productId, petId) => {
+    const query = petId ? `?pet_id=${petId}` : ''
+    return request(`/products/${productId}/breed-compatibility${query}`)
+  },
 
   // 日程提醒
   getSchedules: () => request('/schedules'),
@@ -114,6 +129,35 @@ export const api = {
   createPet: (data) => request('/pets', { method: 'POST', body: JSON.stringify(data) }),
   updatePet: (id, data) => request(`/pets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deletePet: (id) => request(`/pets/${id}`, { method: 'DELETE' }),
+
+  // 喂养日记
+  getFeedingLogs: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return request(`/feeding/logs${query ? `?${query}` : ''}`)
+  },
+  createFeedingLog: (data) => request('/feeding/logs', { method: 'POST', body: JSON.stringify(data) }),
+  updateFeedingLog: (id, data) => request(`/feeding/logs/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteFeedingLog: (id) => request(`/feeding/logs/${id}`, { method: 'DELETE' }),
+  checkProductFeeding: (productId) => request(`/feeding/check/${productId}`),
+  getFeedingDiaries: (params = {}) => {
+    const query = new URLSearchParams(params).toString()
+    return request(`/feeding/diaries${query ? `?${query}` : ''}`)
+  },
+  createFeedingDiary: (data) => request('/feeding/diaries', { method: 'POST', body: JSON.stringify(data) }),
+  deleteFeedingDiary: (id) => request(`/feeding/diaries/${id}`, { method: 'DELETE' }),
+
+  // AI 配料分析
+  analyzeIngredients: (data) => request('/ai/analyze-ingredients', { method: 'POST', body: JSON.stringify(data) }),
+
+  // 产品建议（UGC）
+  createSuggestion: async (formData) => {
+    const token = getToken()
+    const headers = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const res = await fetch('/api/suggestions', { method: 'POST', headers, body: formData })
+    if (!res.ok) throw new Error('提交失败')
+    return res.json()
+  },
 }
 
 export { getToken }

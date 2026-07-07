@@ -9,6 +9,7 @@ export default function PetProfiles() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingPet, setEditingPet] = useState(null)
+  const [selectedSpecies, setSelectedSpecies] = useState('')
   const [formData, setFormData] = useState({
     pet_name: '',
     breed_id: '',
@@ -17,6 +18,15 @@ export default function PetProfiles() {
     weight: '',
     birthday: '',
   })
+
+  // 按物种分组的品种列表
+  const breedsBySpecies = breeds.reduce((acc, breed) => {
+    if (!acc[breed.species]) acc[breed.species] = []
+    acc[breed.species].push(breed)
+    return acc
+  }, {})
+  
+  const filteredBreeds = selectedSpecies ? (breedsBySpecies[selectedSpecies] || []) : []
 
   useEffect(() => {
     loadData()
@@ -144,6 +154,7 @@ export default function PetProfiles() {
                     <img
                       src={pet.breed.image_url}
                       alt={pet.breed.name}
+                      loading="lazy"
                       className="w-16 h-16 rounded-xl object-cover flex-shrink-0"
                     />
                   ) : (
@@ -216,16 +227,47 @@ export default function PetProfiles() {
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-1">品种</label>
-                <select
-                  value={formData.breed_id}
-                  onChange={e => setFormData({ ...formData, breed_id: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white"
-                >
-                  <option value="">选择品种（可选）</option>
-                  {breeds.map(b => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
+                
+                {/* 第一步：选择物种 */}
+                <div className="mb-2">
+                  <div className="text-xs text-gray-500 mb-1.5">先选物种：</div>
+                  <div className="flex gap-2 flex-wrap">
+                    {Object.keys(breedsBySpecies).map(species => (
+                      <button
+                        key={species}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSpecies(species === selectedSpecies ? '' : species)
+                          setFormData({ ...formData, breed_id: '' })
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                          selectedSpecies === species
+                            ? 'bg-primary text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {species === '猫' ? '🐱' : species === '狗' ? '🐶' : species === '兔' ? '🐰' : '🐾'} {species}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* 第二步：选择品种 */}
+                {selectedSpecies && (
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1.5">再选品种：</div>
+                    <select
+                      value={formData.breed_id}
+                      onChange={e => setFormData({ ...formData, breed_id: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white"
+                    >
+                      <option value="">选择品种（可选）</option>
+                      {filteredBreeds.map(b => (
+                        <option key={b.id} value={b.id}>{b.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-1">生日 🎂</label>
@@ -234,7 +276,7 @@ export default function PetProfiles() {
                   value={formData.birthday}
                   onChange={e => setFormData({ ...formData, birthday: e.target.value })}
                   max={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary"
+                  className="w-full min-w-0 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary"
                 />
                 {formData.birthday && (
                   <p className="text-xs text-gray-500 mt-1">

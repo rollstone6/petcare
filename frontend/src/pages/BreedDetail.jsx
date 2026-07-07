@@ -52,12 +52,18 @@ export default function BreedDetail() {
           
           <div className="flex flex-col md:flex-row md:items-start gap-4 md:gap-6">
             <div className="w-full md:w-48 aspect-square md:aspect-[3/4] rounded-2xl overflow-hidden bg-gray-100 flex-shrink-0">
-              <img
-                src={breed.image_url || '/placeholder-breed.svg'}
-                alt={breed.name}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.target.style.display = 'none' }}
-              />
+              {breed.image_url ? (
+                <img
+                  src={breed.image_url}
+                  alt={breed.name}
+                  loading="eager"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-6xl">
+                  {breed.species === '猫' ? '🐱' : breed.species === '狗' ? '🐶' : '🐾'}
+                </div>
+              )}
             </div>
             <div className="flex-1">
               <h1 className="text-xl md:text-2xl font-bold text-gray-900">{breed.name}</h1>

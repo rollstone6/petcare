@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { FreeMode, Mousewheel } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/free-mode'
 import { api } from '../api/client'
 
 export default function Compare() {
@@ -36,14 +40,23 @@ export default function Compare() {
           {/* 已选产品 */}
           {selected.length > 0 && (
             <div className="mt-3">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+              <Swiper
+                modules={[FreeMode, Mousewheel]}
+                spaceBetween={8}
+                slidesPerView="auto"
+                freeMode={true}
+                mousewheel={true}
+                className="pb-2"
+              >
                 {selectedProducts.map(p => (
-                  <div key={p.id} className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm flex items-center gap-1 whitespace-nowrap">
-                    {p.name.split(' ')[0]}
-                    <button onClick={() => toggleSelect(p.id)} className="ml-1">✕</button>
-                  </div>
+                  <SwiperSlide key={p.id} className="!w-auto">
+                    <div className="bg-primary/10 text-primary rounded-full px-3 py-1 text-sm flex items-center gap-1 whitespace-nowrap">
+                      {p.name.split(' ')[0]}
+                      <button onClick={() => toggleSelect(p.id)} className="ml-1">✕</button>
+                    </div>
+                  </SwiperSlide>
                 ))}
-              </div>
+              </Swiper>
               {selected.length >= 2 && (
                 <button
                   onClick={() => setShowCompare(!showCompare)}

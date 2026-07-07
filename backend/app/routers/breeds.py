@@ -8,11 +8,25 @@ from app import models, schemas
 router = APIRouter(prefix="/breeds", tags=["品种"])
 
 
+@router.get("/species", response_model=schemas.ApiResponse)
+def list_species(db: Session = Depends(get_db)):
+    """返回所有物种类别及其数量"""
+    from sqlalchemy import func
+    rows = (
+        db.query(models.PetBreed.species, func.count(models.PetBreed.id))
+        .group_by(models.PetBreed.species)
+        .order_by(func.count(models.PetBreed.id).desc())
+        .all()
+    )
+    return schemas.ApiResponse(data=[{"name": r[0], "count": r[1]} for r in rows])
+
+
 @router.get("", response_model=schemas.ApiResponse)
 def list_breeds(
-    species: Optional[str] = Query(None, description="猫/狗"),
+    species: Optional[str] = Query(None, description="物种类别"),
+    sort_by: Optional[str] = Query("name", description="排序方式: name=按名字, species=按种类"),
     page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=200),
+    page_size: int = Query(100, ge=1, le=200),
     db: Session = Depends(get_db),
 ):
     query = db.query(models.PetBreed)
@@ -20,7 +34,11 @@ def list_breeds(
         query = query.filter(models.PetBreed.species == species)
 
     total = query.count()
-    breeds = query.order_by(models.PetBreed.name).offset(
+    if sort_by == "species":
+        query = query.order_by(models.PetBreed.species, models.PetBreed.name)
+    else:
+        query = query.order_by(models.PetBreed.name)
+    breeds = query.offset(
         (page - 1) * page_size
     ).limit(page_size).all()
 

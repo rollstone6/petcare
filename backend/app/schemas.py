@@ -55,6 +55,7 @@ class ProductIngredient(BaseModel):
     name: str
     sort_order: int = 0
     function: Optional[str] = ""
+    risk_tags: Optional[list] = []
 
 class ProductBase(BaseModel):
     name: str

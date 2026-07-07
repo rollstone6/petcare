@@ -77,6 +77,7 @@ class Ingredient(Base):
     safety_level = Column(Integer, default=3, comment="安全等级 1-5")
     description = Column(Text, default="")
     function = Column(String(500), default="", comment="功效说明")
+    risk_tags = Column(Text, default="[]", comment="风险标签 JSON: [\"肠胃敏感\", \"糖尿病\"]")
 
     products = relationship("Product", secondary=product_ingredient, back_populates="ingredients")
 
@@ -115,6 +116,7 @@ class PetBreed(Base):
     common_issues = Column(Text, default="", comment="常见健康问题")
     description = Column(Text, default="")
     image_url = Column(String(500), default="")
+    health_tags = Column(Text, default="[]", comment="健康风险标签 JSON: [\"多囊肾\", \"肠胃敏感\"]")
 
     recommended_products = relationship("Product", secondary=breed_product, back_populates="suitable_breeds")
 
@@ -246,3 +248,78 @@ class PetProfile(Base):
 
     user = relationship("User")
     breed = relationship("PetBreed")
+
+
+# ===== 喂养记录（我家正在吃） =====
+class FeedingLog(Base):
+    __tablename__ = "feeding_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    pet_name = Column(String(50), nullable=False, comment="宠物名字")
+    product_id = Column(Integer, ForeignKey("products.id"), nullable=False, comment="产品ID")
+    start_date = Column(Date, nullable=False, comment="开始喂养日期")
+    is_active = Column(Integer, default=1, comment="是否正在吃 1=是 0=已停")
+    note = Column(Text, default="", comment="备注")
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("User")
+    product = relationship("Product")
+
+
+# ===== 换粮日记（每日观察记录） =====
+class FeedingDiary(Base):
+    __tablename__ = "feeding_diaries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    pet_name = Column(String(50), nullable=False, comment="宠物名字")
+    feeding_log_id = Column(Integer, ForeignKey("feeding_logs.id"), nullable=True, comment="关联喂养记录")
+    day_number = Column(Integer, nullable=True, comment="换粮第几天 1-7+")
+    record_date = Column(Date, nullable=False, comment="记录日期")
+
+    # 便便观察
+    poop_status = Column(String(20), default="", comment="normal/soft/hard/diarrhea/bloody")
+    poop_count = Column(Integer, default=0, comment="便便次数")
+
+    # 整体状态
+    appetite = Column(String(20), default="", comment="good/normal/poor 食欲")
+    energy = Column(String(20), default="", comment="good/normal/poor 精神状态")
+    vomiting = Column(Integer, default=0, comment="是否呕吐 0=否 1=是")
+
+    note = Column(Text, default="", comment="补充说明")
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("User")
+    feeding_log = relationship("FeedingLog")
+
+
+# ===== 产品众包建议（搜索0结果时用户提交） =====
+class ProductSuggestion(Base):
+    __tablename__ = "product_suggestions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, comment="用户ID（可匿名）")
+    
+    # 用户搜索的关键词
+    search_query = Column(String(200), default="", comment="用户搜索了什么")
+    
+    # 产品信息
+    product_name = Column(String(200), default="", comment="产品名称")
+    brand_name = Column(String(100), default="", comment="品牌名称")
+    product_type = Column(String(20), default="食品", comment="药品/食品/保健品")
+    
+    # 配料表
+    ingredients_text = Column(Text, default="", comment="用户输入的配料表文本")
+    image_url = Column(String(500), default="", comment="上传的图片URL")
+    
+    # AI 分析结果
+    ai_analysis = Column(Text, default="", comment="AI分析结果JSON")
+    ai_score = Column(Float, nullable=True, comment="AI给出的安全评分")
+    
+    # 状态
+    status = Column(String(20), default="pending", comment="pending/analyzed/approved/rejected")
+    
+    created_at = Column(DateTime, default=func.now())
+
+    user = relationship("User")

@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { FreeMode, Mousewheel } from 'swiper/modules'
+import 'swiper/css'
+import 'swiper/css/free-mode'
 import { useApp } from '../context/AppContext'
 import { api } from '../api/client'
 import { getToken } from '../api/client'
@@ -146,34 +150,51 @@ function HealthTab({ state, pets }) {
       {/* 宠物筛选 + 类型筛选 */}
       <div className="space-y-2 pb-3">
         {pets.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            <button onClick={() => setPetFilter('')}
-              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
-                !petFilter ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
-              }`}>
-              🐾 全部
-            </button>
-            {pets.map(p => (
-              <button key={p.id} onClick={() => setPetFilter(p.pet_name)}
+          <Swiper
+            modules={[FreeMode, Mousewheel]}
+            spaceBetween={8}
+            slidesPerView="auto"
+            freeMode={true}
+            mousewheel={true}
+          >
+            <SwiperSlide className="!w-auto">
+              <button onClick={() => setPetFilter('')}
                 className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
-                  petFilter === p.pet_name ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
+                  !petFilter ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
                 }`}>
-                {p.breed?.species === '猫' ? '🐱' : '🐶'} {p.pet_name}
+                🐾 全部
               </button>
+            </SwiperSlide>
+            {pets.map(p => (
+              <SwiperSlide key={p.id} className="!w-auto">
+                <button onClick={() => setPetFilter(p.pet_name)}
+                  className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
+                    petFilter === p.pet_name ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
+                  }`}>
+                  {p.breed?.species === '猫' ? '🐱' : '🐶'} {p.pet_name}
+                </button>
+              </SwiperSlide>
             ))}
-          </div>
+          </Swiper>
         )}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+        <Swiper
+          modules={[FreeMode, Mousewheel]}
+          spaceBetween={8}
+          slidesPerView="auto"
+          freeMode={true}
+          mousewheel={true}
+        >
           {['', '便便', '饮水', '呕吐', '体重', '食欲', '用药'].map(t => (
-            <button key={t || '全部'} onClick={() => setFilter(t)}
-              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
-                filter === t ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              {t ? `${TYPE_ICONS[t]} ${t}` : '📋 全部'}
-            </button>
+            <SwiperSlide key={t || '全部'} className="!w-auto">
+              <button onClick={() => setFilter(t)}
+                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
+                  filter === t ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
+                }`}>
+                {t ? `${TYPE_ICONS[t]} ${t}` : '📋 全部'}
+              </button>
+            </SwiperSlide>
           ))}
-        </div>
+        </Swiper>
       </div>
 
       {/* 时间线 */}
@@ -435,22 +456,33 @@ function ScheduleTab({ pets }) {
 
       {/* 宠物筛选 */}
       {pets.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-3">
-          <button onClick={() => setPetFilter('')}
-            className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
-              !petFilter ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
-            }`}>
-            🐾 全部
-          </button>
-          {pets.map(p => (
-            <button key={p.id} onClick={() => setPetFilter(p.pet_name)}
+        <Swiper
+          modules={[FreeMode, Mousewheel]}
+          spaceBetween={8}
+          slidesPerView="auto"
+          freeMode={true}
+          mousewheel={true}
+          className="mb-3"
+        >
+          <SwiperSlide className="!w-auto">
+            <button onClick={() => setPetFilter('')}
               className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
-                petFilter === p.pet_name ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
+                !petFilter ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
               }`}>
-              {p.breed?.species === '猫' ? '🐱' : '🐶'} {p.pet_name}
+              🐾 全部
             </button>
+          </SwiperSlide>
+          {pets.map(p => (
+            <SwiperSlide key={p.id} className="!w-auto">
+              <button onClick={() => setPetFilter(p.pet_name)}
+                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-colors ${
+                  petFilter === p.pet_name ? 'bg-primary text-white' : 'bg-white text-gray-600 border border-gray-200'
+                }`}>
+                {p.breed?.species === '猫' ? '🐱' : '🐶'} {p.pet_name}
+              </button>
+            </SwiperSlide>
           ))}
-        </div>
+        </Swiper>
       )}
 
       {filteredSchedules.length === 0 ? (
@@ -667,7 +699,403 @@ function AddScheduleModal({ pets, presets, onClose, onAdd }) {
   )
 }
 
+// ===== 喂养日记 Tab =====
+function FeedingTab({ state, pets }) {
+  const [feedingLogs, setFeedingLogs] = useState([])
+  const [selectedLog, setSelectedLog] = useState(null)
+  const [diaries, setDiaries] = useState([])
+  const [showDiaryForm, setShowDiaryForm] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  const fetchFeedingLogs = useCallback(async () => {
+    if (!state.user) { setLoading(false); return }
+    try {
+      const data = await api.getFeedingLogs({ active_only: 'true' })
+      setFeedingLogs(data.items || [])
+    } catch (e) { console.error(e) }
+    setLoading(false)
+  }, [state.user])
+
+  const fetchDiaries = useCallback(async () => {
+    if (!selectedLog) return
+    try {
+      const data = await api.getFeedingDiaries({ feeding_log_id: String(selectedLog.id) })
+      setDiaries(data.items || [])
+    } catch (e) { console.error(e) }
+  }, [selectedLog])
+
+  useEffect(() => { fetchFeedingLogs() }, [fetchFeedingLogs])
+  useEffect(() => { fetchDiaries() }, [fetchDiaries])
+
+  // 计算换粮天数和阶段
+  const getFeedingDay = (startDate) => {
+    const start = new Date(startDate)
+    const today = new Date()
+    const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24)) + 1
+    return diff
+  }
+
+  const getFeedingPhase = (day) => {
+    if (day <= 2) return { phase: '适应期', desc: '新旧粮 1:3', color: 'bg-blue-500' }
+    if (day <= 4) return { phase: '过渡期', desc: '新旧粮 1:1', color: 'bg-yellow-500' }
+    if (day <= 7) return { phase: '切换期', desc: '新粮为主', color: 'bg-orange-500' }
+    return { phase: '已完成', desc: '纯新粮', color: 'bg-green-500' }
+  }
+
+  const getStatusIcon = (status) => {
+    const icons = {
+      'good': '🟢', 'normal': '🟢', 'soft': '🟡', 'hard': '🟡',
+      'diarrhea': '🔴', 'bloody': '🔴', 'poor': '🔴'
+    }
+    return icons[status] || '⚪'
+  }
+
+  if (loading) {
+    return <div className="text-center py-10 text-gray-400">加载中...</div>
+  }
+
+  if (feedingLogs.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <div className="text-5xl mb-3">🍽</div>
+        <p className="text-gray-400">还没有喂养记录</p>
+        <p className="text-sm text-gray-300 mt-1">在产品详情页点击「我家正在吃」开始记录</p>
+      </div>
+    )
+  }
+
+  if (selectedLog) {
+    const day = getFeedingDay(selectedLog.start_date)
+    const phase = getFeedingPhase(day)
+    
+    return (
+      <div>
+        {/* 返回按钮 */}
+        <button onClick={() => setSelectedLog(null)} className="text-primary text-sm mb-3 flex items-center gap-1">
+          ← 返回喂养列表
+        </button>
+
+        {/* 换粮进度卡片 */}
+        <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 mb-4 border border-orange-200">
+          <div className="flex items-start gap-3 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-2xl shadow-sm">
+              🍽
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-gray-900">{selectedLog.product_name}</h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {selectedLog.pet_name} · 第 {day} 天
+              </p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium text-white ${phase.color}`}>
+              {phase.phase}
+            </span>
+          </div>
+          
+          {/* 七天进度条 */}
+          <div className="space-y-2">
+            <div className="flex gap-1">
+              {[1,2,3,4,5,6,7].map(d => (
+                <div key={d} className="flex-1 h-2 rounded-full bg-white/50 relative overflow-hidden">
+                  {day >= d && (
+                    <div className={`absolute inset-0 ${phase.color} transition-all`} />
+                  )}
+                </div>
+              ))}
+            </div>
+            <p className="text-xs text-gray-600 text-center">
+              💡 {phase.desc}
+            </p>
+          </div>
+        </div>
+
+        {/* 记录按钮 */}
+        <button
+          onClick={() => setShowDiaryForm(true)}
+          className="w-full py-3 bg-primary text-white rounded-xl font-medium mb-4 hover:bg-primary/90 transition-colors"
+        >
+          + 记录今日观察
+        </button>
+
+        {/* 日记列表 */}
+        {diaries.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-4xl mb-2">📝</p>
+            <p className="text-gray-400">还没有观察记录</p>
+            <p className="text-xs text-gray-300 mt-1">每天记录宠物状态，追踪换粮效果</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <h3 className="font-semibold text-gray-900">观察记录</h3>
+            {diaries.map(diary => {
+              const d = getFeedingDay(diary.record_date)
+              const ph = getFeedingPhase(d)
+              return (
+                <div key={diary.id} className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-full ${ph.color} flex items-center justify-center text-white text-xs font-bold`}>
+                        {d}
+                      </span>
+                      <span className="text-sm font-medium text-gray-900">第 {d} 天</span>
+                      <span className="text-xs text-gray-400">
+                        {new Date(diary.record_date).toLocaleDateString('zh-CN')}
+                      </span>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        if (confirm('确定删除这条记录吗？')) {
+                          try {
+                            await api.deleteFeedingDiary(diary.id)
+                            fetchDiaries()
+                          } catch (e) { alert(e.message) }
+                        }
+                      }}
+                      className="text-gray-300 hover:text-red-500 text-sm"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <span className="text-gray-500">便便：</span>
+                      <span>{getStatusIcon(diary.poop_status)} {diary.poop_status || '未记录'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">次数：</span>
+                      <span>{diary.poop_count || 0} 次</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">食欲：</span>
+                      <span>{getStatusIcon(diary.appetite)} {diary.appetite || '未记录'}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">精神：</span>
+                      <span>{getStatusIcon(diary.energy)} {diary.energy || '未记录'}</span>
+                    </div>
+                  </div>
+                  
+                  {diary.note && (
+                    <p className="text-xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                      📝 {diary.note}
+                    </p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {showDiaryForm && (
+          <DiaryForm
+            feedingLog={selectedLog}
+            day={day}
+            onClose={() => setShowDiaryForm(false)}
+            onSaved={() => { fetchDiaries(); setShowDiaryForm(false) }}
+          />
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-gray-500 mb-3">记录宠物喂养情况，追踪换粮效果</p>
+      <div className="space-y-3">
+        {feedingLogs.map(log => {
+          const day = getFeedingDay(log.start_date)
+          const phase = getFeedingPhase(day)
+          return (
+            <div
+              key={log.id}
+              onClick={() => setSelectedLog(log)}
+              className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:border-primary/30 cursor-pointer transition-colors"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center text-2xl">
+                  🍽
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">{log.product_name}</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">{log.pet_name}</p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className={`px-2 py-0.5 rounded-full text-xs text-white ${phase.color}`}>
+                      {phase.phase}
+                    </span>
+                    <span className="text-xs text-gray-400">第 {day} 天</span>
+                  </div>
+                </div>
+                <span className="text-gray-300">→</span>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ===== 日记表单 =====
+function DiaryForm({ feedingLog, day, onClose, onSaved }) {
+  const [poopStatus, setPoopStatus] = useState('')
+  const [poopCount, setPoopCount] = useState(0)
+  const [appetite, setAppetite] = useState('')
+  const [energy, setEnergy] = useState('')
+  const [note, setNote] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async () => {
+    setSaving(true)
+    try {
+      await api.createFeedingDiary({
+        pet_name: feedingLog.pet_name,
+        feeding_log_id: feedingLog.id,
+        day_number: day,
+        record_date: new Date().toISOString().split('T')[0],
+        poop_status: poopStatus,
+        poop_count: poopCount,
+        appetite,
+        energy,
+        note,
+      })
+      onSaved()
+    } catch (e) {
+      alert(e.message)
+    }
+    setSaving(false)
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold">记录第 {day} 天观察</h3>
+          <button onClick={onClose} className="text-gray-400 text-xl">✕</button>
+        </div>
+
+        <div className="space-y-4">
+          {/* 便便状态 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">便便状态</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'normal', label: '正常 🟢' },
+                { value: 'soft', label: '软便 🟡' },
+                { value: 'hard', label: '硬便 🟡' },
+                { value: 'diarrhea', label: '拉稀 🔴' },
+                { value: 'bloody', label: '带血 🔴' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setPoopStatus(opt.value)}
+                  className={`py-2 px-3 rounded-lg text-sm ${
+                    poopStatus === opt.value
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 便便次数 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">便便次数</label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setPoopCount(Math.max(0, poopCount - 1))}
+                className="w-10 h-10 rounded-lg bg-gray-100 text-xl font-bold"
+              >
+                -
+              </button>
+              <span className="text-2xl font-bold w-12 text-center">{poopCount}</span>
+              <button
+                onClick={() => setPoopCount(poopCount + 1)}
+                className="w-10 h-10 rounded-lg bg-gray-100 text-xl font-bold"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* 食欲 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">食欲</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'good', label: '很好 🟢' },
+                { value: 'normal', label: '一般 🟡' },
+                { value: 'poor', label: '很差 🔴' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setAppetite(opt.value)}
+                  className={`py-2 px-3 rounded-lg text-sm ${
+                    appetite === opt.value
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 精神状态 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">精神状态</label>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { value: 'good', label: '活泼 🟢' },
+                { value: 'normal', label: '一般 🟡' },
+                { value: 'poor', label: '萎靡 🔴' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setEnergy(opt.value)}
+                  className={`py-2 px-3 rounded-lg text-sm ${
+                    energy === opt.value
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 备注 */}
+          <div>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">备注（可选）</label>
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              placeholder="记录其他观察，如呕吐、饮水量等..."
+              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm resize-none"
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <button
+          onClick={handleSubmit}
+          disabled={saving}
+          className="w-full mt-4 py-3 bg-primary text-white rounded-xl font-medium disabled:opacity-50"
+        >
+          {saving ? '保存中...' : '保存记录'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ===== 主页面 =====
+
 export default function HealthTracker() {
   const { state } = useApp()
   const [tab, setTab] = useState('health') // health | schedule
@@ -715,7 +1143,7 @@ export default function HealthTracker() {
       <div className="bg-white px-4 md:px-8 pt-6 md:pt-8 pb-4 sticky top-0 z-30 shadow-sm">
         <div className="max-w-2xl mx-auto">
           <h1 className="text-xl md:text-2xl font-bold text-gray-900">🏥 家庭管家</h1>
-          <p className="text-sm text-gray-500 mt-1">健康记录 + 日程提醒</p>
+          <p className="text-sm text-gray-500 mt-1">健康记录 + 日程提醒 + 喂养日记</p>
           {/* Tab 切换 */}
           <div className="flex gap-1 mt-3 bg-gray-100 rounded-xl p-1">
             <button
@@ -734,6 +1162,14 @@ export default function HealthTracker() {
             >
               📅 日程提醒
             </button>
+            <button
+              onClick={() => setTab('feeding')}
+              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                tab === 'feeding' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              🍽 喂养日记
+            </button>
           </div>
         </div>
       </div>
@@ -741,10 +1177,9 @@ export default function HealthTracker() {
       {/* 内容区 */}
       <div className="px-4 md:px-8 mt-4">
         <div className="max-w-2xl mx-auto">
-          {tab === 'health'
-            ? <HealthTab state={state} pets={pets} />
-            : <ScheduleTab pets={pets} />
-          }
+          {tab === 'health' && <HealthTab state={state} pets={pets} />}
+          {tab === 'schedule' && <ScheduleTab state={state} pets={pets} />}
+          {tab === 'feeding' && <FeedingTab state={state} pets={pets} />}
         </div>
       </div>
     </div>
