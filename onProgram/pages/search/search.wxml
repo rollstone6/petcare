@@ -1,0 +1,110 @@
+<!--pages/search/search.wxml-->
+<view class="page-search">
+  <!-- 搜索栏 -->
+  <view class="search-header">
+    <view class="search-bar">
+      <view class="search-icon">🔍</view>
+      <input 
+        class="search-input" 
+        placeholder="搜索产品名称、品牌..." 
+        value="{{keyword}}"
+        bindinput="onInput"
+        bindconfirm="onSearch"
+        focus="{{true}}"
+        confirm-type="search"
+      />
+      <view wx:if="{{keyword}}" class="clear-btn" bindtap="onClear">✕</view>
+    </view>
+  </view>
+
+  <!-- 筛选条件 -->
+  <view class="filter-section">
+    <!-- 类型筛选 -->
+    <scroll-view class="filter-row" scroll-x>
+      <view 
+        class="filter-tag {{filterType === '' ? 'active' : ''}}"
+        bindtap="onTypeFilter"
+        data-type=""
+      >全部</view>
+      <view 
+        class="filter-tag {{filterType === '药品' ? 'active' : ''}}"
+        bindtap="onTypeFilter"
+        data-type="药品"
+      >💊 药品</view>
+      <view 
+        class="filter-tag {{filterType === '食品' ? 'active' : ''}}"
+        bindtap="onTypeFilter"
+        data-type="食品"
+      >🍖 食品</view>
+      <view 
+        class="filter-tag {{filterType === '保健品' ? 'active' : ''}}"
+        bindtap="onTypeFilter"
+        data-type="保健品"
+      >💪 保健品</view>
+    </scroll-view>
+
+    <!-- 排序 -->
+    <view class="sort-row">
+      <view 
+        class="sort-item {{sortBy === 'default' ? 'active' : ''}}"
+        bindtap="onSort"
+        data-sort="default"
+      >综合</view>
+      <view 
+        class="sort-item {{sortBy === 'score' ? 'active' : ''}}"
+        bindtap="onSort"
+        data-sort="score"
+      >评分</view>
+      <view 
+        class="sort-item {{sortBy === 'newest' ? 'active' : ''}}"
+        bindtap="onSort"
+        data-sort="newest"
+      >最新</view>
+    </view>
+  </view>
+
+  <!-- 搜索结果 -->
+  <view class="result-section">
+    <!-- 加载中 -->
+    <view wx:if="{{loading && products.length === 0}}" class="loading">
+      <view class="loading-text">搜索中...</view>
+    </view>
+
+    <!-- 产品列表 -->
+    <view wx:else class="product-list">
+      <view 
+        wx:for="{{products}}" 
+        wx:key="id" 
+        class="product-card"
+        bindtap="onProductTap"
+        data-id="{{item.id}}"
+      >
+        <view class="image">
+          <image src="{{item.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+        </view>
+        <view class="info">
+          <view class="name">{{item.name}}</view>
+          <view class="brand">{{item.brand || '未知品牌'}}</view>
+          <view class="desc">{{item.description || ''}}</view>
+          <view class="meta">
+            <view class="tag tag-primary">{{item.type || '药品'}}</view>
+            <view class="score safety-{{item.safety_score >= 4 ? '5' : item.safety_score >= 3 ? '3' : '1'}}">
+              ⭐ {{item.safety_score || 0}}
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view wx:if="{{loading}}" class="load-more">加载中...</view>
+      <view wx:elif="{{!hasMore && products.length > 0}}" class="load-more">没有更多了</view>
+
+      <!-- 空状态 -->
+      <view wx:if="{{!loading && products.length === 0}}" class="empty-state">
+        <view class="icon">🔍</view>
+        <view class="text">未找到相关产品</view>
+        <view class="sub-text">换个关键词试试吧</view>
+      </view>
+    </view>
+  </view>
+</view>

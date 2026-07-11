@@ -1,0 +1,38 @@
+<!--pages/user/login.wxml-->
+<view class="page-login">
+  <view class="login-header">
+    <text class="logo">🐾</text>
+    <text class="title">宠物用品商城</text>
+  </view>
+
+  <view class="login-form card">
+    <view class="form-item">
+      <text class="label">用户名</text>
+      <input class="input" placeholder="请输入用户名" value="{{username}}" bindinput="onUsernameInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="label">密码</text>
+      <input class="input" type="password" placeholder="请输入密码" value="{{password}}" bindinput="onPasswordInput" />
+    </view>
+
+    <button class="submit-btn" bindtap="onSubmit" loading="{{loading}}">
+      {{isRegister ? '注册' : '登录'}}
+    </button>
+
+    <view class="toggle-link" bindtap="toggleRegister">
+      {{isRegister ? '已有账号？去登录' : '没有账号？去注册'}}
+    </view>
+  </view>
+
+  <view class="divider">
+    <view class="line"></view>
+    <text class="text">其他登录方式</text>
+    <view class="line"></view>
+  </view>
+
+  <view class="wechat-login" bindtap="onWechatLogin">
+    <text class="icon">💬</text>
+    <text>微信快捷登录</text>
+  </view>
+</view>

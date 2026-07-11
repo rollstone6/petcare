@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "成分百科",
+  "usingComponents": {
+    "tab-bar": "/components/tab-bar/tab-bar"
+  }
+}

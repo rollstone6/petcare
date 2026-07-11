@@ -1,0 +1,259 @@
+/* app.wxss - 全局样式 */
+
+/* 主题色 */
+page {
+  --primary-color: #07c160;
+  --primary-light: #e8f8ee;
+  --danger-color: #fa5151;
+  --warning-color: #ff9500;
+  --text-color: #333333;
+  --text-secondary: #666666;
+  --text-light: #999999;
+  --border-color: #eeeeee;
+  --bg-color: #f5f5f5;
+  --white: #ffffff;
+  
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 28rpx;
+  color: var(--text-color);
+  background-color: var(--bg-color);
+}
+
+/* 通用容器 */
+.container {
+  padding: 20rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background: var(--white);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 安全评分颜色 */
+.safety-5 { color: #07c160; }
+.safety-4 { color: #3cc51f; }
+.safety-3 { color: #ff9500; }
+.safety-2 { color: #ff6b00; }
+.safety-1 { color: #fa5151; }
+
+/* 安全评分背景 */
+.safety-bg-5 { background-color: #e8f8ee; }
+.safety-bg-4 { background-color: #e8f8ee; }
+.safety-bg-3 { background-color: #fff8e6; }
+.safety-bg-2 { background-color: #fff0e6; }
+.safety-bg-1 { background-color: #ffebeb; }
+
+/* 按钮样式 */
+.btn-primary {
+  background: var(--primary-color);
+  color: var(--white);
+  border: none;
+  border-radius: 8rpx;
+  padding: 20rpx 40rpx;
+  font-size: 28rpx;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+/* 搜索框 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  border-radius: 40rpx;
+  padding: 16rpx 24rpx;
+  margin: 20rpx;
+}
+
+.search-bar input {
+  flex: 1;
+  font-size: 28rpx;
+  margin-left: 16rpx;
+}
+
+/* 标签 */
+.tag {
+  display: inline-block;
+  padding: 4rpx 16rpx;
+  border-radius: 4rpx;
+  font-size: 22rpx;
+  margin-right: 12rpx;
+}
+
+.tag-primary {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+.tag-warning {
+  background: #fff8e6;
+  color: #ff9500;
+}
+
+.tag-danger {
+  background: #ffebeb;
+  color: #fa5151;
+}
+
+/* 列表项 */
+.list-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  background: var(--white);
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 40rpx;
+}
+
+.empty-state .icon {
+  font-size: 120rpx;
+  color: var(--text-light);
+  margin-bottom: 20rpx;
+}
+
+.empty-state .text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}
+
+/* 加载更多 */
+.load-more {
+  text-align: center;
+  padding: 40rpx;
+  color: var(--text-light);
+  font-size: 24rpx;
+}
+
+/* 星级评分 */
+.stars {
+  display: flex;
+  align-items: center;
+}
+
+.star {
+  color: #ffd700;
+  font-size: 28rpx;
+  margin-right: 4rpx;
+}
+
+.star-empty {
+  color: #e0e0e0;
+}
+
+/* 产品卡片 */
+.product-card {
+  display: flex;
+  background: var(--white);
+  border-radius: 16rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.product-card .image {
+  width: 200rpx;
+  height: 200rpx;
+  flex-shrink: 0;
+}
+
+.product-card .image image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card .info {
+  flex: 1;
+  padding: 20rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.product-card .name {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 8rpx;
+}
+
+.product-card .brand {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.product-card .score {
+  display: flex;
+  align-items: center;
+}
+
+.product-card .score-value {
+  font-size: 32rpx;
+  font-weight: bold;
+  margin-right: 8rpx;
+}
+
+/* 分类网格 */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20rpx;
+  padding: 20rpx;
+}
+
+.category-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx;
+  background: var(--white);
+  border-radius: 16rpx;
+}
+
+.category-item .icon {
+  width: 80rpx;
+  height: 80rpx;
+  margin-bottom: 12rpx;
+}
+
+.category-item .text {
+  font-size: 24rpx;
+  color: var(--text-color);
+}
+
+/* 章节标题 */
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+}
+
+.section-title .title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.section-title .more {
+  font-size: 24rpx;
+  color: var(--text-light);
+}

@@ -1,0 +1,2212 @@
+/**
+ * 自动创建宠物宝小程序剩余页面文件
+ * 运行方式: node create-pages.js
+ */
+
+const fs = require('fs')
+const path = require('path')
+
+const BASE_DIR = path.join(__dirname, 'miniprogram')
+
+// 创建目录
+function mkdir(dirPath) {
+  const fullPath = path.join(BASE_DIR, dirPath)
+  if (!fs.existsSync(fullPath)) {
+    fs.mkdirSync(fullPath, { recursive: true })
+    console.log(`创建目录: ${dirPath}`)
+  }
+}
+
+// 写入文件
+function writeFile(filePath, content) {
+  const fullPath = path.join(BASE_DIR, filePath)
+  fs.writeFileSync(fullPath, content, 'utf8')
+  console.log(`创建文件: ${filePath}`)
+}
+
+// ==================== 产品详情页 ====================
+function createProductDetail() {
+  mkdir('pages/product')
+  
+  // detail.wxml
+  writeFile('pages/product/detail.wxml', `<!--pages/product/detail.wxml-->
+<view class="page-product-detail">
+  <!-- 加载中 -->
+  <view wx:if="{{loading}}" class="loading">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{product}}">
+    <!-- 产品图片 -->
+    <view class="product-image">
+      <image src="{{product.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="product-info card">
+      <view class="product-name">{{product.name}}</view>
+      <view class="product-brand" bindtap="onBrandTap">
+        <text>{{product.brand || '未知品牌'}}</text>
+        <text class="arrow">></text>
+      </view>
+      <view class="product-tags">
+        <view class="tag tag-primary">{{product.type || '药品'}}</view>
+        <view wx:if="{{product.category}}" class="tag">{{product.category}}</view>
+      </view>
+    </view>
+
+    <!-- 安全评分 -->
+    <view class="safety-section card">
+      <view class="section-header">
+        <view class="title">🛡️ 安全评分</view>
+      </view>
+      <view class="safety-score">
+        <view class="score-circle safety-bg-{{product.safety_score >= 4 ? '5' : product.safety_score >= 3 ? '3' : '1'}}">
+          <view class="score-value safety-{{product.safety_score >= 4 ? '5' : product.safety_score >= 3 ? '3' : '1'}}">
+            {{product.safety_score || 0}}
+          </view>
+          <view class="score-label">/ 5</view>
+        </view>
+        <view class="score-desc">
+          <view class="desc-item">
+            <text class="label">安全等级：</text>
+            <text class="value safety-{{product.safety_score >= 4 ? '5' : product.safety_score >= 3 ? '3' : '1'}}">
+              {{product.safety_score >= 4.5 ? '非常安全' : product.safety_score >= 3.5 ? '安全' : product.safety_score >= 2.5 ? '一般' : product.safety_score >= 1.5 ? '需谨慎' : '不推荐'}}
+            </text>
+          </view>
+          <view wx:if="{{product.review_count}}" class="desc-item">
+            <text class="label">评价数量：</text>
+            <text class="value">{{product.review_count}} 条</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 产品描述 -->
+    <view wx:if="{{product.description}}" class="description-section card">
+      <view class="section-header">
+        <view class="title">📝 产品描述</view>
+      </view>
+      <view class="description-content">{{product.description}}</view>
+    </view>
+
+    <!-- 成分列表 -->
+    <view wx:if="{{product.ingredients && product.ingredients.length > 0}}" class="ingredients-section card">
+      <view class="section-header">
+        <view class="title">🧪 主要成分</view>
+      </view>
+      <view class="ingredients-list">
+        <view 
+          wx:for="{{product.ingredients}}" 
+          wx:key="id" 
+          class="ingredient-item"
+          bindtap="onIngredientTap"
+          data-id="{{item.id}}"
+        >
+          <view class="ingredient-name">{{item.name}}</view>
+          <view class="ingredient-safety safety-{{item.safety_score >= 4 ? '5' : item.safety_score >= 3 ? '3' : '1'}}">
+            {{item.safety_score || '?'}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 使用说明 -->
+    <view wx:if="{{product.usage_instructions}}" class="usage-section card">
+      <view class="section-header">
+        <view class="title">📋 使用说明</view>
+      </view>
+      <view class="usage-content">{{product.usage_instructions}}</view>
+    </view>
+
+    <!-- 注意事项 -->
+    <view wx:if="{{product.warnings}}" class="warnings-section card">
+      <view class="section-header">
+        <view class="title">⚠️ 注意事项</view>
+      </view>
+      <view class="warnings-content">{{product.warnings}}</view>
+    </view>
+
+    <!-- 用户评价 -->
+    <view class="reviews-section card">
+      <view class="section-header">
+        <view class="title">💬 用户评价</view>
+        <view class="action" bindtap="onWriteReview">写评价</view>
+      </view>
+      
+      <view wx:if="{{reviews.length === 0}}" class="no-reviews">
+        暂无评价，快来发表你的看法吧
+      </view>
+      
+      <view wx:else class="reviews-list">
+        <view wx:for="{{reviews}}" wx:key="id" class="review-item">
+          <view class="review-header">
+            <view class="user-avatar">
+              <image wx:if="{{item.user_avatar}}" src="{{item.user_avatar}}" />
+              <text wx:else>👤</text>
+            </view>
+            <view class="user-info">
+              <view class="user-name">{{item.user_name || '匿名用户'}}</view>
+              <view class="review-date">{{item.created_at}}</view>
+            </view>
+            <view class="review-rating">
+              <text wx:for="{{5}}" wx:key="*this" class="star {{item.rating > index ? '' : 'star-empty'}}">★</text>
+            </view>
+          </view>
+          <view class="review-content">{{item.content}}</view>
+        </view>
+        
+        <view wx:if="{{hasMoreReviews}}" class="load-more" bindtap="onLoadMoreReviews">
+          加载更多评价
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view class="bottom-bar">
+      <view class="action-btn {{isFavorite ? 'active' : ''}}" bindtap="onToggleFavorite">
+        <text class="icon">{{isFavorite ? '❤️' : '🤍'}}</text>
+        <text class="text">{{isFavorite ? '已收藏' : '收藏'}}</text>
+      </view>
+      <button class="share-btn" open-type="share">
+        <text class="icon">📤</text>
+        <text class="text">分享</text>
+      </button>
+    </view>
+  </block>
+
+  <!-- 加载失败 -->
+  <view wx:else class="error-state">
+    <view class="icon">😥</view>
+    <view class="text">加载失败</view>
+  </view>
+</view>`)
+
+  // detail.wxss
+  writeFile('pages/product/detail.wxss', `/* pages/product/detail.wxss */
+
+.page-product-detail {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding-bottom: 120rpx;
+}
+
+.loading {
+  padding: 100rpx;
+  text-align: center;
+}
+
+.loading-text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}
+
+/* 产品图片 */
+.product-image {
+  width: 100%;
+  height: 600rpx;
+  background: #f0f0f0;
+}
+
+.product-image image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 产品信息 */
+.product-info {
+  margin: 20rpx;
+}
+
+.product-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 16rpx;
+}
+
+.product-brand {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 28rpx;
+  margin-bottom: 16rpx;
+}
+
+.product-brand .arrow {
+  margin-left: 8rpx;
+  color: var(--text-light);
+}
+
+.product-tags {
+  display: flex;
+  gap: 12rpx;
+}
+
+/* 安全评分 */
+.safety-section {
+  margin: 0 20rpx 20rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.section-header .title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.section-header .action {
+  font-size: 26rpx;
+  color: var(--primary-color);
+}
+
+.safety-score {
+  display: flex;
+  align-items: center;
+}
+
+.score-circle {
+  width: 160rpx;
+  height: 160rpx;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 40rpx;
+}
+
+.score-value {
+  font-size: 56rpx;
+  font-weight: bold;
+}
+
+.score-label {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.score-desc {
+  flex: 1;
+}
+
+.desc-item {
+  margin-bottom: 16rpx;
+}
+
+.desc-item .label {
+  color: var(--text-secondary);
+  font-size: 26rpx;
+}
+
+.desc-item .value {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+/* 描述/使用说明/注意事项 */
+.description-section,
+.usage-section,
+.warnings-section {
+  margin: 0 20rpx 20rpx;
+}
+
+.description-content,
+.usage-content,
+.warnings-content {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+/* 成分列表 */
+.ingredients-section {
+  margin: 0 20rpx 20rpx;
+}
+
+.ingredients-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.ingredient-item {
+  display: flex;
+  align-items: center;
+  background: var(--bg-color);
+  padding: 16rpx 24rpx;
+  border-radius: 8rpx;
+}
+
+.ingredient-name {
+  font-size: 26rpx;
+  color: var(--text-color);
+  margin-right: 12rpx;
+}
+
+.ingredient-safety {
+  font-size: 24rpx;
+  font-weight: bold;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+}
+
+/* 评价 */
+.reviews-section {
+  margin: 0 20rpx 20rpx;
+}
+
+.no-reviews {
+  text-align: center;
+  padding: 40rpx;
+  color: var(--text-light);
+  font-size: 26rpx;
+}
+
+.review-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.user-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+  overflow: hidden;
+}
+
+.user-avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 26rpx;
+  color: var(--text-color);
+}
+
+.review-date {
+  font-size: 22rpx;
+  color: var(--text-light);
+}
+
+.review-rating {
+  display: flex;
+}
+
+.review-content {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* 底部操作栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--white);
+  padding: 20rpx;
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.action-btn,
+.share-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+}
+
+.action-btn::after,
+.share-btn::after {
+  border: none;
+}
+
+.action-btn .icon,
+.share-btn .icon {
+  font-size: 40rpx;
+  margin-bottom: 8rpx;
+}
+
+.action-btn .text,
+.share-btn .text {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+}
+
+.action-btn.active .text {
+  color: var(--danger-color);
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx;
+}
+
+.error-state .icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-state .text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}`)
+
+  // detail.json
+  writeFile('pages/product/detail.json', `{
+  "navigationBarTitleText": "产品详情"
+}`)
+}
+
+// ==================== 成分百科页 ====================
+function createIngredientPages() {
+  mkdir('pages/ingredient')
+  
+  // index.js
+  writeFile('pages/ingredient/index.js', `// pages/ingredient/index.js
+const api = require('../../utils/api')
+
+Page({
+  data: {
+    keyword: '',
+    ingredients: [],
+    loading: true,
+    page: 1,
+    hasMore: true
+  },
+
+  onLoad() {
+    this.loadIngredients()
+  },
+
+  async loadIngredients(reset = true) {
+    if (reset) {
+      this.setData({ page: 1, ingredients: [], hasMore: true })
+    }
+    
+    this.setData({ loading: true })
+    
+    try {
+      const params = {
+        page: this.data.page,
+        page_size: 20
+      }
+      if (this.data.keyword) params.q = this.data.keyword
+      
+      const result = await api.getIngredients(params)
+      const items = result.items || result || []
+      
+      this.setData({
+        ingredients: reset ? items : [...this.data.ingredients, ...items],
+        hasMore: items.length >= 20,
+        loading: false
+      })
+    } catch (err) {
+      console.error('加载成分列表失败:', err)
+      this.setData({ loading: false })
+    }
+  },
+
+  onInput(e) {
+    this.setData({ keyword: e.detail.value })
+  },
+
+  onSearch() {
+    this.loadIngredients()
+  },
+
+  onClear() {
+    this.setData({ keyword: '' })
+    this.loadIngredients()
+  },
+
+  onIngredientTap(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: \`/pages/ingredient/detail?id=\${id}\`
+    })
+  },
+
+  onLoadMore() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.setData({ page: this.data.page + 1 })
+      this.loadIngredients(false)
+    }
+  },
+
+  onReachBottom() {
+    this.onLoadMore()
+  }
+})`)
+
+  // index.wxml
+  writeFile('pages/ingredient/index.wxml', `<!--pages/ingredient/index.wxml-->
+<view class="page-ingredient">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <view class="search-icon">🔍</view>
+    <input 
+      class="search-input" 
+      placeholder="搜索成分名称..." 
+      value="{{keyword}}"
+      bindinput="onInput"
+      bindconfirm="onSearch"
+      confirm-type="search"
+    />
+    <view wx:if="{{keyword}}" class="clear-btn" bindtap="onClear">✕</view>
+  </view>
+
+  <!-- 成分列表 -->
+  <view class="ingredient-list">
+    <view wx:if="{{loading && ingredients.length === 0}}" class="loading">
+      <view class="loading-text">加载中...</view>
+    </view>
+
+    <block wx:else>
+      <view 
+        wx:for="{{ingredients}}" 
+        wx:key="id" 
+        class="ingredient-card card"
+        bindtap="onIngredientTap"
+        data-id="{{item.id}}"
+      >
+        <view class="ingredient-header">
+          <view class="ingredient-name">{{item.name}}</view>
+          <view class="safety-badge safety-{{item.safety_score >= 4 ? '5' : item.safety_score >= 3 ? '3' : '1'}}">
+            {{item.safety_score || '?'}}
+          </view>
+        </view>
+        <view wx:if="{{item.description}}" class="ingredient-desc">
+          {{item.description}}
+        </view>
+        <view wx:if="{{item.category}}" class="ingredient-category">
+          <view class="tag">{{item.category}}</view>
+        </view>
+      </view>
+
+      <view wx:if="{{loading}}" class="load-more">加载中...</view>
+      <view wx:elif="{{!hasMore && ingredients.length > 0}}" class="load-more">没有更多了</view>
+
+      <view wx:if="{{!loading && ingredients.length === 0}}" class="empty-state">
+        <view class="icon">🧪</view>
+        <view class="text">暂无成分数据</view>
+      </view>
+    </block>
+  </view>
+</view>`)
+
+  // index.wxss
+  writeFile('pages/ingredient/index.wxss', `/* pages/ingredient/index.wxss */
+
+.page-ingredient {
+  min-height: 100vh;
+  background: var(--bg-color);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  margin: 20rpx;
+  padding: 20rpx 30rpx;
+  border-radius: 40rpx;
+}
+
+.search-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+}
+
+.clear-btn {
+  font-size: 28rpx;
+  color: var(--text-light);
+  padding: 10rpx;
+}
+
+.ingredient-list {
+  padding: 0 20rpx;
+}
+
+.ingredient-card {
+  margin-bottom: 20rpx;
+}
+
+.ingredient-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.ingredient-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.safety-badge {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  font-weight: bold;
+  color: var(--white);
+}
+
+.safety-badge.safety-5 { background: #07c160; }
+.safety-badge.safety-3 { background: #ff9500; }
+.safety-badge.safety-1 { background: #fa5151; }
+
+.ingredient-desc {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ingredient-category {
+  display: flex;
+  gap: 12rpx;
+}
+
+.loading {
+  padding: 60rpx;
+  text-align: center;
+}
+
+.loading-text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}
+
+.load-more {
+  text-align: center;
+  padding: 40rpx;
+  color: var(--text-light);
+  font-size: 24rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx;
+}
+
+.empty-state .icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-state .text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}`)
+
+  // index.json
+  writeFile('pages/ingredient/index.json', `{
+  "navigationBarTitleText": "成分百科"
+}`)
+
+  // detail.js
+  writeFile('pages/ingredient/detail.js', `// pages/ingredient/detail.js
+const api = require('../../utils/api')
+
+Page({
+  data: {
+    ingredient: null,
+    relatedProducts: [],
+    loading: true
+  },
+
+  onLoad(options) {
+    if (options.id) {
+      this.loadIngredient(options.id)
+    }
+  },
+
+  async loadIngredient(id) {
+    try {
+      const ingredient = await api.getIngredientDetail(id)
+      this.setData({ ingredient, loading: false })
+    } catch (err) {
+      console.error('加载成分详情失败:', err)
+      this.setData({ loading: false })
+      wx.showToast({ title: '加载失败', icon: 'none' })
+    }
+  },
+
+  onProductTap(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: \`/pages/product/detail?id=\${id}\`
+    })
+  }
+})`)
+
+  // detail.wxml
+  writeFile('pages/ingredient/detail.wxml', `<!--pages/ingredient/detail.wxml-->
+<view class="page-ingredient-detail">
+  <view wx:if="{{loading}}" class="loading">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{ingredient}}">
+    <!-- 成分头部 -->
+    <view class="ingredient-header card">
+      <view class="ingredient-name">{{ingredient.name}}</view>
+      <view class="safety-badge safety-bg-{{ingredient.safety_score >= 4 ? '5' : ingredient.safety_score >= 3 ? '3' : '1'}}">
+        <view class="score safety-{{ingredient.safety_score >= 4 ? '5' : ingredient.safety_score >= 3 ? '3' : '1'}}">
+          {{ingredient.safety_score || '?'}}
+        </view>
+        <view class="label">安全评分</view>
+      </view>
+    </view>
+
+    <!-- 成分描述 -->
+    <view wx:if="{{ingredient.description}}" class="desc-section card">
+      <view class="section-title">📝 成分说明</view>
+      <view class="desc-content">{{ingredient.description}}</view>
+    </view>
+
+    <!-- 功效 -->
+    <view wx:if="{{ingredient.benefits}}" class="benefits-section card">
+      <view class="section-title">✨ 主要功效</view>
+      <view class="benefits-content">{{ingredient.benefits}}</view>
+    </view>
+
+    <!-- 安全说明 -->
+    <view wx:if="{{ingredient.safety_notes}}" class="safety-section card">
+      <view class="section-title">🛡️ 安全说明</view>
+      <view class="safety-content">{{ingredient.safety_notes}}</view>
+    </view>
+
+    <!-- 含有该成分的产品 -->
+    <view wx:if="{{relatedProducts.length > 0}}" class="products-section card">
+      <view class="section-title">📦 含有该成分的产品</view>
+      <view class="products-list">
+        <view 
+          wx:for="{{relatedProducts}}" 
+          wx:key="id" 
+          class="product-item"
+          bindtap="onProductTap"
+          data-id="{{item.id}}"
+        >
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-score safety-{{item.safety_score >= 4 ? '5' : item.safety_score >= 3 ? '3' : '1'}}">
+            {{item.safety_score}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:else class="error-state">
+    <view class="icon">😥</view>
+    <view class="text">加载失败</view>
+  </view>
+</view>`)
+
+  // detail.wxss
+  writeFile('pages/ingredient/detail.wxss', `/* pages/ingredient/detail.wxss */
+
+.page-ingredient-detail {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding: 20rpx;
+}
+
+.loading {
+  padding: 100rpx;
+  text-align: center;
+}
+
+.loading-text {
+  color: var(--text-light);
+}
+
+.ingredient-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ingredient-name {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  flex: 1;
+}
+
+.safety-badge {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.safety-badge .score {
+  font-size: 40rpx;
+  font-weight: bold;
+}
+
+.safety-badge .label {
+  font-size: 20rpx;
+  color: var(--text-light);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 20rpx;
+}
+
+.desc-content,
+.benefits-content,
+.safety-content {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.products-list {
+  margin-top: 20rpx;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-name {
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+.product-score {
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx;
+}
+
+.error-state .icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-state .text {
+  color: var(--text-light);
+}`)
+
+  // detail.json
+  writeFile('pages/ingredient/detail.json', `{
+  "navigationBarTitleText": "成分详情"
+}`)
+}
+
+// ==================== 品种百科页 ====================
+function createBreedPages() {
+  mkdir('pages/breed')
+  
+  // index.js
+  writeFile('pages/breed/index.js', `// pages/breed/index.js
+const api = require('../../utils/api')
+
+Page({
+  data: {
+    breeds: [],
+    loading: true,
+    activeTab: 'dog', // dog / cat
+    page: 1,
+    hasMore: true
+  },
+
+  onLoad() {
+    this.loadBreeds()
+  },
+
+  async loadBreeds(reset = true) {
+    if (reset) {
+      this.setData({ page: 1, breeds: [], hasMore: true })
+    }
+    
+    this.setData({ loading: true })
+    
+    try {
+      const params = {
+        page: this.data.page,
+        page_size: 20,
+        type: this.data.activeTab
+      }
+      
+      const result = await api.getBreeds(params)
+      const items = result.items || result || []
+      
+      this.setData({
+        breeds: reset ? items : [...this.data.breeds, ...items],
+        hasMore: items.length >= 20,
+        loading: false
+      })
+    } catch (err) {
+      console.error('加载品种列表失败:', err)
+      this.setData({ loading: false })
+    }
+  },
+
+  onTabChange(e) {
+    const tab = e.currentTarget.dataset.tab
+    this.setData({ activeTab: tab })
+    this.loadBreeds()
+  },
+
+  onBreedTap(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: \`/pages/breed/detail?id=\${id}\`
+    })
+  },
+
+  onLoadMore() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.setData({ page: this.data.page + 1 })
+      this.loadBreeds(false)
+    }
+  },
+
+  onReachBottom() {
+    this.onLoadMore()
+  }
+})`)
+
+  // index.wxml
+  writeFile('pages/breed/index.wxml', `<!--pages/breed/index.wxml-->
+<view class="page-breed">
+  <!-- Tab 切换 -->
+  <view class="tab-bar">
+    <view class="tab-item {{activeTab === 'dog' ? 'active' : ''}}" bindtap="onTabChange" data-tab="dog">
+      🐕 狗狗
+    </view>
+    <view class="tab-item {{activeTab === 'cat' ? 'active' : ''}}" bindtap="onTabChange" data-tab="cat">
+      🐱 猫咪
+    </view>
+  </view>
+
+  <!-- 品种列表 -->
+  <view class="breed-list">
+    <view wx:if="{{loading && breeds.length === 0}}" class="loading">
+      <view class="loading-text">加载中...</view>
+    </view>
+
+    <block wx:else>
+      <view 
+        wx:for="{{breeds}}" 
+        wx:key="id" 
+        class="breed-card card"
+        bindtap="onBreedTap"
+        data-id="{{item.id}}"
+      >
+        <view class="breed-image">
+          <image src="{{item.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+        </view>
+        <view class="breed-info">
+          <view class="breed-name">{{item.name}}</view>
+          <view wx:if="{{item.origin}}" class="breed-origin">📍 {{item.origin}}</view>
+          <view wx:if="{{item.size}}" class="breed-size">
+            <view class="tag tag-primary">{{item.size}}</view>
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{loading}}" class="load-more">加载中...</view>
+      <view wx:elif="{{!hasMore && breeds.length > 0}}" class="load-more">没有更多了</view>
+
+      <view wx:if="{{!loading && breeds.length === 0}}" class="empty-state">
+        <view class="icon">🐾</view>
+        <view class="text">暂无品种数据</view>
+      </view>
+    </block>
+  </view>
+</view>`)
+
+  // index.wxss
+  writeFile('pages/breed/index.wxss', `/* pages/breed/index.wxss */
+
+.page-breed {
+  min-height: 100vh;
+  background: var(--bg-color);
+}
+
+.tab-bar {
+  display: flex;
+  background: var(--white);
+  padding: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx;
+  font-size: 30rpx;
+  color: var(--text-secondary);
+  border-radius: 8rpx;
+}
+
+.tab-item.active {
+  background: var(--primary-light);
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.breed-list {
+  padding: 0 20rpx;
+}
+
+.breed-card {
+  display: flex;
+  margin-bottom: 20rpx;
+}
+
+.breed-image {
+  width: 200rpx;
+  height: 200rpx;
+  flex-shrink: 0;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background: #f0f0f0;
+}
+
+.breed-image image {
+  width: 100%;
+  height: 100%;
+}
+
+.breed-info {
+  flex: 1;
+  margin-left: 24rpx;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.breed-name {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 12rpx;
+}
+
+.breed-origin {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.breed-size {
+  display: flex;
+  gap: 12rpx;
+}
+
+.loading {
+  padding: 60rpx;
+  text-align: center;
+}
+
+.loading-text {
+  color: var(--text-light);
+}
+
+.load-more {
+  text-align: center;
+  padding: 40rpx;
+  color: var(--text-light);
+  font-size: 24rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx;
+}
+
+.empty-state .icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-state .text {
+  color: var(--text-light);
+}`)
+
+  // index.json
+  writeFile('pages/breed/index.json', `{
+  "navigationBarTitleText": "品种百科"
+}`)
+
+  // detail.js
+  writeFile('pages/breed/detail.js', `// pages/breed/detail.js
+const api = require('../../utils/api')
+
+Page({
+  data: {
+    breed: null,
+    recommendedProducts: [],
+    loading: true
+  },
+
+  onLoad(options) {
+    if (options.id) {
+      this.loadBreed(options.id)
+    }
+  },
+
+  async loadBreed(id) {
+    try {
+      const [breed, products] = await Promise.all([
+        api.getBreedDetail(id),
+        api.getBreedProducts(id).catch(() => [])
+      ])
+      this.setData({ 
+        breed, 
+        recommendedProducts: products || [],
+        loading: false 
+      })
+    } catch (err) {
+      console.error('加载品种详情失败:', err)
+      this.setData({ loading: false })
+      wx.showToast({ title: '加载失败', icon: 'none' })
+    }
+  },
+
+  onProductTap(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: \`/pages/product/detail?id=\${id}\`
+    })
+  }
+})`)
+
+  // detail.wxml
+  writeFile('pages/breed/detail.wxml', `<!--pages/breed/detail.wxml-->
+<view class="page-breed-detail">
+  <view wx:if="{{loading}}" class="loading">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{breed}}">
+    <!-- 品种图片 -->
+    <view class="breed-image">
+      <image src="{{breed.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="breed-info card">
+      <view class="breed-name">{{breed.name}}</view>
+      <view class="breed-meta">
+        <view wx:if="{{breed.origin}}" class="meta-item">
+          <text class="label">产地：</text>
+          <text>{{breed.origin}}</text>
+        </view>
+        <view wx:if="{{breed.size}}" class="meta-item">
+          <text class="label">体型：</text>
+          <text>{{breed.size}}</text>
+        </view>
+        <view wx:if="{{breed.lifespan}}" class="meta-item">
+          <text class="label">寿命：</text>
+          <text>{{breed.lifespan}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 品种介绍 -->
+    <view wx:if="{{breed.description}}" class="desc-section card">
+      <view class="section-title">📝 品种介绍</view>
+      <view class="desc-content">{{breed.description}}</view>
+    </view>
+
+    <!-- 性格特点 -->
+    <view wx:if="{{breed.temperament}}" class="temperament-section card">
+      <view class="section-title">🎭 性格特点</view>
+      <view class="temperament-content">{{breed.temperament}}</view>
+    </view>
+
+    <!-- 饲养建议 -->
+    <view wx:if="{{breed.care_tips}}" class="care-section card">
+      <view class="section-title">💡 饲养建议</view>
+      <view class="care-content">{{breed.care_tips}}</view>
+    </view>
+
+    <!-- 常见健康问题 -->
+    <view wx:if="{{breed.health_issues}}" class="health-section card">
+      <view class="section-title">🏥 常见健康问题</view>
+      <view class="health-content">{{breed.health_issues}}</view>
+    </view>
+
+    <!-- 推荐产品 -->
+    <view wx:if="{{recommendedProducts.length > 0}}" class="products-section card">
+      <view class="section-title">🎁 推荐产品</view>
+      <view class="products-list">
+        <view 
+          wx:for="{{recommendedProducts}}" 
+          wx:key="id" 
+          class="product-item"
+          bindtap="onProductTap"
+          data-id="{{item.id}}"
+        >
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-score safety-{{item.safety_score >= 4 ? '5' : item.safety_score >= 3 ? '3' : '1'}}">
+            ⭐ {{item.safety_score}}
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:else class="error-state">
+    <view class="icon">😥</view>
+    <view class="text">加载失败</view>
+  </view>
+</view>`)
+
+  // detail.wxss
+  writeFile('pages/breed/detail.wxss', `/* pages/breed/detail.wxss */
+
+.page-breed-detail {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding-bottom: 40rpx;
+}
+
+.loading {
+  padding: 100rpx;
+  text-align: center;
+}
+
+.loading-text {
+  color: var(--text-light);
+}
+
+.breed-image {
+  width: 100%;
+  height: 500rpx;
+  background: #f0f0f0;
+}
+
+.breed-image image {
+  width: 100%;
+  height: 100%;
+}
+
+.breed-info {
+  margin: 20rpx;
+}
+
+.breed-name {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 20rpx;
+}
+
+.breed-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.meta-item {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.meta-item .label {
+  color: var(--text-light);
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 20rpx;
+}
+
+.desc-section,
+.temperament-section,
+.care-section,
+.health-section,
+.products-section {
+  margin: 0 20rpx 20rpx;
+}
+
+.desc-content,
+.temperament-content,
+.care-content,
+.health-content {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.products-list {
+  margin-top: 20rpx;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-name {
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+.product-score {
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx;
+}
+
+.error-state .icon {
+  font-size: 100rpx;
+  margin-bottom: 20rpx;
+}
+
+.error-state .text {
+  color: var(--text-light);
+}`)
+
+  // detail.json
+  writeFile('pages/breed/detail.json', `{
+  "navigationBarTitleText": "品种详情"
+}`)
+}
+
+// ==================== 个人中心页 ====================
+function createUserPages() {
+  mkdir('pages/user')
+  
+  // index.js
+  writeFile('pages/user/index.js', `// pages/user/index.js
+const api = require('../../utils/api')
+const app = getApp()
+
+Page({
+  data: {
+    userInfo: null,
+    isLogin: false,
+    favorites: [],
+    stats: {
+      favoriteCount: 0,
+      reviewCount: 0
+    }
+  },
+
+  onLoad() {
+    this.checkLogin()
+  },
+
+  onShow() {
+    this.checkLogin()
+    if (this.data.isLogin) {
+      this.loadUserData()
+    }
+  },
+
+  checkLogin() {
+    const isLogin = app.globalData.isLogin
+    const userInfo = app.globalData.userInfo
+    this.setData({ isLogin, userInfo })
+  },
+
+  async loadUserData() {
+    try {
+      const favorites = await api.getFavorites()
+      this.setData({
+        favorites: favorites || [],
+        'stats.favoriteCount': (favorites || []).length
+      })
+    } catch (err) {
+      console.error('加载用户数据失败:', err)
+    }
+  },
+
+  onLogin() {
+    wx.navigateTo({
+      url: '/pages/user/login'
+    })
+  },
+
+  onLogout() {
+    wx.showModal({
+      title: '确认退出',
+      content: '确定要退出登录吗？',
+      success: (res) => {
+        if (res.confirm) {
+          api.clearToken()
+          app.globalData.userInfo = null
+          app.globalData.isLogin = false
+          this.setData({
+            isLogin: false,
+            userInfo: null,
+            favorites: [],
+            stats: { favoriteCount: 0, reviewCount: 0 }
+          })
+          wx.showToast({ title: '已退出登录', icon: 'none' })
+        }
+      }
+    })
+  },
+
+  onFavoriteTap(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: \`/pages/product/detail?id=\${id}\`
+    })
+  },
+
+  onEditProfile() {
+    wx.showToast({ title: '编辑资料功能开发中', icon: 'none' })
+  }
+})`)
+
+  // index.wxml
+  writeFile('pages/user/index.wxml', `<!--pages/user/index.wxml-->
+<view class="page-user">
+  <!-- 用户信息区域 -->
+  <view class="user-header">
+    <block wx:if="{{isLogin && userInfo}}">
+      <view class="avatar">
+        <image wx:if="{{userInfo.avatar}}" src="{{userInfo.avatar}}" />
+        <text wx:else>👤</text>
+      </view>
+      <view class="user-info">
+        <view class="nickname">{{userInfo.nickname || userInfo.username || '用户'}}</view>
+        <view class="edit-btn" bindtap="onEditProfile">编辑资料</view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="avatar">
+        <text>👤</text>
+      </view>
+      <view class="user-info">
+        <view class="login-btn" bindtap="onLogin">点击登录</view>
+        <view class="login-hint">登录后享受更多功能</view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 统计信息 -->
+  <view wx:if="{{isLogin}}" class="stats-section card">
+    <view class="stats-item">
+      <view class="stats-value">{{stats.favoriteCount}}</view>
+      <view class="stats-label">收藏</view>
+    </view>
+    <view class="stats-item">
+      <view class="stats-value">{{stats.reviewCount}}</view>
+      <view class="stats-label">评价</view>
+    </view>
+  </view>
+
+  <!-- 我的收藏 -->
+  <view wx:if="{{isLogin}}" class="favorites-section card">
+    <view class="section-header">
+      <view class="title">❤️ 我的收藏</view>
+    </view>
+    
+    <view wx:if="{{favorites.length === 0}}" class="empty-favorites">
+      暂无收藏产品
+    </view>
+    
+    <view wx:else class="favorites-list">
+      <view 
+        wx:for="{{favorites}}" 
+        wx:key="id" 
+        class="favorite-item"
+        bindtap="onFavoriteTap"
+        data-id="{{item.product_id}}"
+      >
+        <view class="favorite-name">{{item.product_name || '产品'}}</view>
+        <view class="arrow">></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section card">
+    <view class="menu-item" bindtap="onEditProfile">
+      <text class="icon">📝</text>
+      <text class="text">编辑资料</text>
+      <text class="arrow">></text>
+    </view>
+    <view class="menu-item">
+      <text class="icon">📋</text>
+      <text class="text">我的评价</text>
+      <text class="arrow">></text>
+    </view>
+    <view class="menu-item">
+      <text class="icon">⚙️</text>
+      <text class="text">设置</text>
+      <text class="arrow">></text>
+    </view>
+    <view class="menu-item">
+      <text class="icon">❓</text>
+      <text class="text">帮助与反馈</text>
+      <text class="arrow">></text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view wx:if="{{isLogin}}" class="logout-btn" bindtap="onLogout">
+    退出登录
+  </view>
+</view>`)
+
+  // index.wxss
+  writeFile('pages/user/index.wxss', `/* pages/user/index.wxss */
+
+.page-user {
+  min-height: 100vh;
+  background: var(--bg-color);
+}
+
+/* 用户头部 */
+.user-header {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #07c160 0%, #06ad56 100%);
+  padding: 60rpx 40rpx;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 30rpx;
+  overflow: hidden;
+}
+
+.avatar image {
+  width: 100%;
+  height: 100%;
+}
+
+.avatar text {
+  font-size: 60rpx;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.nickname {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--white);
+  margin-bottom: 12rpx;
+}
+
+.login-btn {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--white);
+  margin-bottom: 8rpx;
+}
+
+.login-hint {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.edit-btn {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 8rpx 20rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.5);
+  border-radius: 30rpx;
+  display: inline-block;
+}
+
+/* 统计 */
+.stats-section {
+  display: flex;
+  margin: -40rpx 20rpx 20rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.stats-item {
+  flex: 1;
+  text-align: center;
+  padding: 30rpx;
+}
+
+.stats-value {
+  font-size: 40rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 8rpx;
+}
+
+.stats-label {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+/* 收藏 */
+.favorites-section {
+  margin: 0 20rpx 20rpx;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.section-header .title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.empty-favorites {
+  text-align: center;
+  padding: 40rpx;
+  color: var(--text-light);
+  font-size: 26rpx;
+}
+
+.favorite-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.favorite-item:last-child {
+  border-bottom: none;
+}
+
+.favorite-name {
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+.arrow {
+  color: var(--text-light);
+}
+
+/* 菜单 */
+.menu-section {
+  margin: 0 20rpx 20rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item .icon {
+  font-size: 36rpx;
+  margin-right: 20rpx;
+}
+
+.menu-item .text {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+.menu-item .arrow {
+  color: var(--text-light);
+}
+
+/* 退出登录 */
+.logout-btn {
+  margin: 40rpx 20rpx;
+  text-align: center;
+  padding: 30rpx;
+  background: var(--white);
+  border-radius: 16rpx;
+  color: var(--danger-color);
+  font-size: 30rpx;
+}`)
+
+  // index.json
+  writeFile('pages/user/index.json', `{
+  "navigationBarTitleText": "我的"
+}`)
+
+  // login.js
+  writeFile('pages/user/login.js', `// pages/user/login.js
+const api = require('../../utils/api')
+const app = getApp()
+
+Page({
+  data: {
+    mode: 'login', // login / register
+    username: '',
+    password: '',
+    confirmPassword: '',
+    nickname: '',
+    loading: false
+  },
+
+  onModeChange(e) {
+    const mode = e.currentTarget.dataset.mode
+    this.setData({ mode })
+  },
+
+  onInput(e) {
+    const field = e.currentTarget.dataset.field
+    this.setData({ [field]: e.detail.value })
+  },
+
+  async onSubmit() {
+    const { mode, username, password, confirmPassword, nickname } = this.data
+    
+    // 验证
+    if (!username || !password) {
+      wx.showToast({ title: '请填写用户名和密码', icon: 'none' })
+      return
+    }
+    
+    if (mode === 'register') {
+      if (password !== confirmPassword) {
+        wx.showToast({ title: '两次密码不一致', icon: 'none' })
+        return
+      }
+      if (!nickname) {
+        wx.showToast({ title: '请填写昵称', icon: 'none' })
+        return
+      }
+    }
+    
+    this.setData({ loading: true })
+    
+    try {
+      let result
+      if (mode === 'login') {
+        result = await api.login({ username, password })
+      } else {
+        result = await api.register({ username, password, nickname })
+      }
+      
+      // 保存 token
+      if (result && result.token) {
+        api.setToken(result.token)
+        app.globalData.isLogin = true
+        
+        // 获取用户信息
+        try {
+          const userInfo = await api.getUserInfo()
+          app.globalData.userInfo = userInfo
+        } catch (e) {}
+        
+        wx.showToast({ 
+          title: mode === 'login' ? '登录成功' : '注册成功', 
+          icon: 'success' 
+        })
+        
+        setTimeout(() => {
+          wx.navigateBack()
+        }, 1500)
+      }
+    } catch (err) {
+      console.error('登录/注册失败:', err)
+    } finally {
+      this.setData({ loading: false })
+    }
+  },
+
+  onWechatLogin() {
+    wx.showToast({ title: '微信登录功能开发中', icon: 'none' })
+  }
+})`)
+
+  // login.wxml
+  writeFile('pages/user/login.wxml', `<!--pages/user/login.wxml-->
+<view class="page-login">
+  <view class="login-header">
+    <view class="logo">🐾</view>
+    <view class="title">宠物宝</view>
+    <view class="subtitle">专业的宠物产品安全指南</view>
+  </view>
+
+  <!-- Tab 切换 -->
+  <view class="tab-bar">
+    <view class="tab-item {{mode === 'login' ? 'active' : ''}}" bindtap="onModeChange" data-mode="login">
+      登录
+    </view>
+    <view class="tab-item {{mode === 'register' ? 'active' : ''}}" bindtap="onModeChange" data-mode="register">
+      注册
+    </view>
+  </view>
+
+  <!-- 表单 -->
+  <view class="form-section">
+    <view class="form-item">
+      <view class="form-label">用户名</view>
+      <input 
+        class="form-input" 
+        placeholder="请输入用户名" 
+        value="{{username}}"
+        bindinput="onInput"
+        data-field="username"
+      />
+    </view>
+    
+    <view class="form-item">
+      <view class="form-label">密码</view>
+      <input 
+        class="form-input" 
+        type="password"
+        placeholder="请输入密码" 
+        value="{{password}}"
+        bindinput="onInput"
+        data-field="password"
+      />
+    </view>
+
+    <view wx:if="{{mode === 'register'}}" class="form-item">
+      <view class="form-label">确认密码</view>
+      <input 
+        class="form-input" 
+        type="password"
+        placeholder="请再次输入密码" 
+        value="{{confirmPassword}}"
+        bindinput="onInput"
+        data-field="confirmPassword"
+      />
+    </view>
+
+    <view wx:if="{{mode === 'register'}}" class="form-item">
+      <view class="form-label">昵称</view>
+      <input 
+        class="form-input" 
+        placeholder="请输入昵称" 
+        value="{{nickname}}"
+        bindinput="onInput"
+        data-field="nickname"
+      />
+    </view>
+
+    <button class="submit-btn btn-primary" bindtap="onSubmit" disabled="{{loading}}">
+      {{loading ? '处理中...' : (mode === 'login' ? '登录' : '注册')}}
+    </button>
+  </view>
+
+  <!-- 微信登录 -->
+  <view class="divider">
+    <view class="line"></view>
+    <view class="text">或</view>
+    <view class="line"></view>
+  </view>
+
+  <button class="wechat-btn" bindtap="onWechatLogin">
+    <text class="icon">💬</text>
+    <text>微信快捷登录</text>
+  </button>
+</view>`)
+
+  // login.wxss
+  writeFile('pages/user/login.wxss', `/* pages/user/login.wxss */
+
+.page-login {
+  min-height: 100vh;
+  background: var(--white);
+  padding: 60rpx 40rpx;
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: 60rpx;
+}
+
+.logo {
+  font-size: 120rpx;
+  margin-bottom: 20rpx;
+}
+
+.title {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 12rpx;
+}
+
+.subtitle {
+  font-size: 26rpx;
+  color: var(--text-light);
+}
+
+/* Tab */
+.tab-bar {
+  display: flex;
+  margin-bottom: 40rpx;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx;
+  font-size: 30rpx;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.tab-item.active {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 30%;
+  right: 30%;
+  height: 4rpx;
+  background: var(--primary-color);
+  border-radius: 2rpx;
+}
+
+/* 表单 */
+.form-section {
+  margin-bottom: 40rpx;
+}
+
+.form-item {
+  margin-bottom: 30rpx;
+}
+
+.form-label {
+  font-size: 28rpx;
+  color: var(--text-color);
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  padding: 24rpx;
+  background: var(--bg-color);
+  border-radius: 12rpx;
+  font-size: 28rpx;
+}
+
+.submit-btn {
+  margin-top: 40rpx;
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+}
+
+/* 分割线 */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 40rpx 0;
+}
+
+.divider .line {
+  flex: 1;
+  height: 1rpx;
+  background: var(--border-color);
+}
+
+.divider .text {
+  padding: 0 20rpx;
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+/* 微信登录 */
+.wechat-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 88rpx;
+  background: #07c160;
+  color: var(--white);
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  border: none;
+}
+
+.wechat-btn::after {
+  border: none;
+}
+
+.wechat-btn .icon {
+  margin-right: 12rpx;
+  font-size: 36rpx;
+}`)
+
+  // login.json
+  writeFile('pages/user/login.json', `{
+  "navigationBarTitleText": "登录"
+}`)
+}
+
+// ==================== 创建占位图标 ====================
+function createTabIcons() {
+  mkdir('images/tab')
+  
+  // 创建简单的 SVG 占位图标（实际项目中需要替换为真实图标）
+  const icons = [
+    { name: 'home', emoji: '🏠' },
+    { name: 'home-active', emoji: '🏠' },
+    { name: 'ingredient', emoji: '🧪' },
+    { name: 'ingredient-active', emoji: '🧪' },
+    { name: 'breed', emoji: '🐾' },
+    { name: 'breed-active', emoji: '🐾' },
+    { name: 'user', emoji: '👤' },
+    { name: 'user-active', emoji: '👤' }
+  ]
+  
+  // 创建简单的 PNG 占位文件说明
+  writeFile('images/tab/README.md', `# TabBar 图标说明
+
+请在此目录放置以下图标文件（建议尺寸：81x81px）：
+
+- home.png / home-active.png - 首页图标
+- ingredient.png / ingredient-active.png - 成分图标  
+- breed.png / breed-active.png - 品种图标
+- user.png / user-active.png - 我的图标
+
+可以使用 iconfont 或其他图标库下载对应图标。
+临时方案：使用 emoji 或在线图标 URL 替代。
+`)
+}
+
+// ==================== 主函数 ====================
+function main() {
+  console.log('开始创建宠物宝小程序页面文件...\n')
+  
+  createProductDetail()
+  console.log('✅ 产品详情页创建完成\n')
+  
+  createIngredientPages()
+  console.log('✅ 成分百科页创建完成\n')
+  
+  createBreedPages()
+  console.log('✅ 品种百科页创建完成\n')
+  
+  createUserPages()
+  console.log('✅ 个人中心页创建完成\n')
+  
+  createTabIcons()
+  console.log('✅ TabBar 图标目录创建完成\n')
+  
+  console.log('========================================')
+  console.log('🎉 所有页面文件创建完成！')
+  console.log('========================================')
+  console.log('\n下一步：')
+  console.log('1. 在微信开发者工具中打开 miniprogram 目录')
+  console.log('2. 替换 images/tab 目录中的占位图标')
+  console.log('3. 配置后端 API 地址（utils/api.js 中的 BASE_URL）')
+  console.log('4. 测试各页面功能')
+}
+
+main()

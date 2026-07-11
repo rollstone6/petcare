@@ -1,0 +1,81 @@
+<!--pages/index/index.wxml-->
+<view class="page-index">
+  <!-- 搜索栏 -->
+  <view class="search-bar" bindtap="onSearchTap">
+    <view class="search-icon">🔍</view>
+    <input 
+      class="search-input" 
+      placeholder="搜索宠物药品、食品、成分..." 
+      value="{{searchValue}}"
+      bindinput="onSearchInput"
+      bindconfirm="onSearchConfirm"
+      confirm-type="search"
+    />
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="category-grid">
+    <view class="category-item" bindtap="onCategoryTap" data-type="药品" data-name="药品">
+      <view class="icon">💊</view>
+      <view class="text">药品</view>
+    </view>
+    <view class="category-item" bindtap="onCategoryTap" data-type="食品" data-name="食品">
+      <view class="icon">🍖</view>
+      <view class="text">食品</view>
+    </view>
+    <view class="category-item" bindtap="onCategoryTap" data-type="保健品" data-name="保健品">
+      <view class="icon">💪</view>
+      <view class="text">保健品</view>
+    </view>
+    <view class="category-item" bindtap="onCategoryTap" data-type="" data-name="品种百科">
+      <view class="icon">🐾</view>
+      <view class="text">品种百科</view>
+    </view>
+  </view>
+
+  <!-- 热门产品 -->
+  <view class="section">
+    <view class="section-title">
+      <view class="title">🔥 热门产品</view>
+      <view class="more" bindtap="onMoreTap">查看更多 ></view>
+    </view>
+
+    <!-- 加载中 -->
+    <view wx:if="{{loading}}" class="loading">
+      <view class="loading-text">加载中...</view>
+    </view>
+
+    <!-- 产品列表 -->
+    <view wx:else class="product-list">
+      <view 
+        wx:for="{{hotProducts}}" 
+        wx:key="id" 
+        class="product-card"
+        bindtap="onProductTap"
+        data-id="{{item.id}}"
+      >
+        <view class="image">
+          <image src="{{item.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+        </view>
+        <view class="info">
+          <view class="name">{{item.name}}</view>
+          <view class="brand">{{item.brand || '未知品牌'}}</view>
+          <view class="meta">
+            <view class="tag tag-primary">{{item.type || '药品'}}</view>
+            <view class="score safety-{{item.safety_score >= 4 ? '5' : item.safety_score >= 3 ? '3' : '1'}}">
+              ⭐ {{item.safety_score || 0}}
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 空状态 -->
+      <view wx:if="{{hotProducts.length === 0}}" class="empty-state">
+        <view class="icon">📦</view>
+        <view class="text">暂无产品数据</view>
+      </view>
+    </view>
+  </view>
+
+  <tab-bar selected="{{0}}" />
+</view>

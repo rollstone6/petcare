@@ -1,0 +1,38 @@
+<!--pages/user/index.wxml-->
+<view class="page-user">
+  <!-- 用户信息区域 -->
+  <view class="user-header">
+    <block wx:if="{{isLogin && userInfo}}">
+      <image class="avatar" src="{{userInfo.avatar || '/images/default-avatar.png'}}" />
+      <view class="user-info">
+        <view class="nickname">{{userInfo.nickname || userInfo.username}}</view>
+        <view class="user-desc">{{userInfo.bio || '这个人很懒，什么都没写~'}}</view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="avatar-placeholder">👤</view>
+      <view class="user-info">
+        <view class="login-btn" bindtap="onLoginTap">点击登录</view>
+        <view class="user-desc">登录后享受更多功能</view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 菜单列表 -->
+  <view class="menu-list card">
+    <view class="menu-item" wx:for="{{menuList}}" wx:key="title" bindtap="onMenuTap" data-url="{{item.url}}">
+      <view class="menu-left">
+        <text class="menu-icon">{{item.icon}}</text>
+        <text class="menu-title">{{item.title}}</text>
+      </view>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-btn" wx:if="{{isLogin}}" bindtap="onLogout">
+    退出登录
+  </view>
+
+  <tab-bar selected="{{3}}" />
+</view>

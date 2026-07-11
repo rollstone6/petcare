@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "宠物宝",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "tab-bar": "/components/tab-bar/tab-bar"
+  }
+}

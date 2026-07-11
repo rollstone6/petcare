@@ -1,0 +1,236 @@
+/* pages/product/detail.wxss */
+
+.page-detail {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding-bottom: 120rpx;
+}
+
+/* 产品图片 */
+.product-image {
+  width: 100%;
+  height: 600rpx;
+  background: #f0f0f0;
+}
+
+.product-image image {
+  width: 100%;
+  height: 100%;
+}
+
+/* 信息卡片 */
+.info-card {
+  margin: -40rpx 20rpx 20rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.product-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 12rpx;
+}
+
+.product-brand {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.brand-text {
+  font-size: 28rpx;
+  color: var(--primary-color);
+}
+
+.arrow {
+  font-size: 28rpx;
+  color: var(--text-light);
+  margin-left: 8rpx;
+}
+
+.product-desc {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20rpx;
+}
+
+/* 安全评分 */
+.safety-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 24rpx;
+  border-radius: 12rpx;
+  margin-top: 16rpx;
+}
+
+.score-label {
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+.score-value {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+/* 卡片标题 */
+.card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 20rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+/* 成分列表 */
+.ingredient-list {
+  max-height: 400rpx;
+  overflow-y: auto;
+}
+
+.ingredient-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.ingredient-item:last-child {
+  border-bottom: none;
+}
+
+.ingredient-name {
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+.ingredient-risk {
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 4rpx;
+}
+
+.risk-1 {
+  background: #e8f8ee;
+  color: #07c160;
+}
+
+.risk-2 {
+  background: #fff8e6;
+  color: #ff9500;
+}
+
+.risk-3 {
+  background: #fff0e6;
+  color: #ff6b00;
+}
+
+.risk-4, .risk-5 {
+  background: #ffebeb;
+  color: #fa5151;
+}
+
+/* 评价 */
+.empty-reviews {
+  padding: 40rpx;
+  text-align: center;
+  color: var(--text-light);
+  font-size: 28rpx;
+}
+
+.review-item {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.reviewer {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.review-content {
+  font-size: 28rpx;
+  color: var(--text-color);
+  line-height: 1.6;
+  margin-bottom: 8rpx;
+}
+
+.review-time {
+  font-size: 22rpx;
+  color: var(--text-light);
+}
+
+/* 底部操作栏 */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  padding: 16rpx 0;
+  padding-bottom: calc(16rpx + env(safe-area-inset-bottom));
+  box-shadow: 0 -2rpx 12rpx rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.bar-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.bar-btn::after {
+  border: none;
+}
+
+.bar-btn.active {
+  color: var(--primary-color);
+}
+
+.bar-btn .icon {
+  font-size: 40rpx;
+  margin-bottom: 4rpx;
+}
+
+.share-btn {
+  font-size: 22rpx;
+}
+
+/* 加载中 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.loading-text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}

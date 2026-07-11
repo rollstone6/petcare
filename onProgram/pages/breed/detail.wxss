@@ -1,0 +1,82 @@
+/* pages/breed/detail.wxss */
+
+.page-detail {
+  min-height: 100vh;
+  background: var(--bg-color);
+}
+
+.breed-banner {
+  width: 100%;
+  height: 400rpx;
+  background: #f0f0f0;
+}
+
+.breed-banner image {
+  width: 100%;
+  height: 100%;
+}
+
+.breed-name {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 12rpx;
+}
+
+.breed-desc {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: var(--text-color);
+  margin-bottom: 20rpx;
+  padding-bottom: 16rpx;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.desc-text {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.product-list {
+  max-height: 400rpx;
+  overflow-y: auto;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.product-item:last-child { border-bottom: none; }
+
+.product-name {
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+.product-brand {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.loading-text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}

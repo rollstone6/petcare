@@ -1,0 +1,58 @@
+/* pages/breed/index.wxss */
+
+.page-breed {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+.breed-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.breed-card {
+  width: 48%;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+}
+
+.breed-image {
+  width: 100%;
+  height: 240rpx;
+  background: #f0f0f0;
+}
+
+.breed-info {
+  padding: 16rpx;
+}
+
+.breed-name {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: 8rpx;
+}
+
+.breed-desc {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.loading-text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}

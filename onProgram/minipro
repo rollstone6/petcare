@@ -1,0 +1,147 @@
+// pages/search/search.js
+const api = require('../../utils/api')
+
+Page({
+  data: {
+    keyword: '',
+    type: '',
+    products: [],
+    categories: [],
+    brands: [],
+    loading: false,
+    hasMore: true,
+    page: 1,
+    pageSize: 20,
+    sortBy: 'default', // default, score, newest
+    filterType: '', // 药品/食品/保健品
+    filterBrand: ''
+  },
+
+  onLoad(options) {
+    // 从首页传递的参数
+    if (options.q) {
+      this.setData({ keyword: decodeURIComponent(options.q) })
+    }
+    if (options.type) {
+      this.setData({ 
+        filterType: decodeURIComponent(options.type),
+        type: decodeURIComponent(options.type)
+      })
+    }
+    
+    this.loadFilters()
+    this.search()
+  },
+
+  // 加载筛选条件
+  async loadFilters() {
+    try {
+      const [categories, brands] = await Promise.all([
+        api.getCategories(),
+        api.getBrands()
+      ])
+      this.setData({
+        categories: categories || [],
+        brands: brands || []
+      })
+    } catch (err) {
+      console.error('加载筛选条件失败:', err)
+    }
+  },
+
+  // 搜索
+  async search(reset = true) {
+    if (reset) {
+      this.setData({ page: 1, products: [], hasMore: true })
+    }
+    
+    if (!this.data.hasMore && !reset) return
+    
+    this.setData({ loading: true })
+    
+    try {
+      const params = {
+        page: this.data.page,
+        page_size: this.data.pageSize
+      }
+      
+      if (this.data.keyword) params.q = this.data.keyword
+      if (this.data.filterType) params.type = this.data.filterType
+      if (this.data.filterBrand) params.brand_id = this.data.filterBrand
+      
+      const result = await api.getProducts(params)
+      const items = result.items || result || []
+      
+      this.setData({
+        products: reset ? items : [...this.data.products, ...items],
+        hasMore: items.length >= this.data.pageSize,
+        loading: false
+      })
+    } catch (err) {
+      console.error('搜索失败:', err)
+      this.setData({ loading: false })
+    }
+  },
+
+  // 输入搜索关键词
+  onInput(e) {
+    this.setData({ keyword: e.detail.value })
+  },
+
+  // 确认搜索
+  onSearch() {
+    this.search()
+  },
+
+  // 清除搜索
+  onClear() {
+    this.setData({ keyword: '' })
+    this.search()
+  },
+
+  // 选择类型筛选
+  onTypeFilter(e) {
+    const type = e.currentTarget.dataset.type
+    this.setData({ 
+      filterType: this.data.filterType === type ? '' : type 
+    })
+    this.search()
+  },
+
+  // 选择品牌筛选
+  onBrandFilter(e) {
+    const brandId = e.currentTarget.dataset.id
+    this.setData({
+      filterBrand: this.data.filterBrand === brandId ? '' : brandId
+    })
+    this.search()
+  },
+
+  // 排序
+  onSort(e) {
+    const sort = e.currentTarget.dataset.sort
+    this.setData({ sortBy: sort })
+    this.search()
+  },
+
+  // 加载更多
+  onLoadMore() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.setData({ page: this.data.page + 1 })
+      this.search(false)
+    }
+  },
+
+  // 产品点击
+  onProductTap(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: `/pages/product/detail?id=${id}`
+    })
+  },
+
+  // 滚动到底部加载更多
+  onReachBottom() {
+    this.onLoadMore()
+  }
+})

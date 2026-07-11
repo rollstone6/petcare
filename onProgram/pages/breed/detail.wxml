@@ -1,0 +1,47 @@
+<!--pages/breed/detail.wxml-->
+<view class="page-detail">
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{breed}}">
+    <!-- 头部图片 -->
+    <view class="breed-banner">
+      <image src="{{breed.image || '/images/placeholder.png'}}" mode="aspectFill" />
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="card">
+      <view class="breed-name">{{breed.name}}</view>
+      <view class="breed-desc">{{breed.description}}</view>
+    </view>
+
+    <!-- 特征信息 -->
+    <view class="card" wx:if="{{breed.characteristics}}">
+      <view class="card-title">品种特征</view>
+      <view class="desc-text">{{breed.characteristics}}</view>
+    </view>
+
+    <!-- 护理建议 -->
+    <view class="card" wx:if="{{breed.care_tips}}">
+      <view class="card-title">护理建议</view>
+      <view class="desc-text">{{breed.care_tips}}</view>
+    </view>
+
+    <!-- 推荐产品 -->
+    <view class="card" wx:if="{{products.length}}">
+      <view class="card-title">推荐产品</view>
+      <view class="product-list">
+        <view class="product-item" wx:for="{{products}}" wx:key="id" bindtap="onProductTap" data-id="{{item.id}}">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-brand">{{item.brand}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="empty-state" wx:else>
+    <text class="icon">🐾</text>
+    <text class="text">加载失败</text>
+  </view>
+</view>

@@ -1,0 +1,23 @@
+<!--pages/breed/index.wxml-->
+<view class="page-breed">
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <view class="breed-list" wx:else>
+    <view class="breed-card card" wx:for="{{breeds}}" wx:key="id" bindtap="onBreedTap" data-id="{{item.id}}">
+      <image class="breed-image" src="{{item.image || '/images/placeholder.png'}}" mode="aspectFill" />
+      <view class="breed-info">
+        <view class="breed-name">{{item.name}}</view>
+        <view class="breed-desc">{{item.description}}</view>
+      </view>
+    </view>
+
+    <view class="empty-state" wx:if="{{breeds.length == 0}}">
+      <text class="icon">🐾</text>
+      <text class="text">暂无品种数据</text>
+    </view>
+  </view>
+
+  <tab-bar selected="{{2}}" />
+</view>

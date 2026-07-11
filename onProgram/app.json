@@ -1,0 +1,23 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/search/search",
+    "pages/product/detail",
+    "pages/ingredient/index",
+    "pages/ingredient/detail",
+    "pages/breed/index",
+    "pages/breed/detail",
+    "pages/user/index",
+    "pages/user/login"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "宠物宝",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f5f5"
+  },
+  "usingComponents": {},
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

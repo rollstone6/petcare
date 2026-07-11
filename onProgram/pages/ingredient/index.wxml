@@ -1,0 +1,52 @@
+<!--pages/ingredient/index.wxml-->
+<view class="page-ingredient">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <text class="search-icon">🔍</text>
+    <input class="search-input" placeholder="搜索成分" value="{{searchValue}}" bindinput="onSearchInput" bindconfirm="onSearchConfirm" />
+  </view>
+
+  <!-- 分类筛选 -->
+  <scroll-view class="filter-scroll" scroll-x>
+    <view class="filter-list">
+      <view class="filter-tag {{currentCategory == item.value ? 'active' : ''}}" wx:for="{{categories}}" wx:key="value" bindtap="onCategoryTap" data-value="{{item.value}}">
+        {{item.name}}
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading && ingredients.length == 0}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <!-- 成分列表 -->
+  <view class="ingredient-list" wx:else>
+    <view class="ingredient-card card" wx:for="{{ingredients}}" wx:key="id" bindtap="onIngredientTap" data-id="{{item.id}}">
+      <view class="ingredient-header">
+        <view class="ingredient-name">{{item.name}}</view>
+        <view class="risk-badge risk-{{item.risk_level}}">
+          <text wx:if="{{item.risk_level == 1}}">安全</text>
+          <text wx:elif="{{item.risk_level == 2}}">低风险</text>
+          <text wx:elif="{{item.risk_level == 3}}">中风险</text>
+          <text wx:else>高风险</text>
+        </view>
+      </view>
+      <view class="ingredient-category">{{item.category_name || item.category}}</view>
+      <view class="ingredient-desc">{{item.brief_desc || item.description}}</view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{ingredients.length == 0}}">
+      <text class="icon">🧪</text>
+      <text class="text">暂无成分数据</text>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{hasMore && ingredients.length > 0}}">
+      {{loading ? '加载中...' : '上拉加载更多'}}
+    </view>
+  </view>
+
+  <tab-bar selected="{{1}}" />
+</view>

@@ -1,0 +1,132 @@
+/* pages/ingredient/index.wxss */
+
+.page-ingredient {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding-bottom: 120rpx;
+}
+
+/* 搜索栏 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  background: var(--white);
+  margin: 20rpx;
+  padding: 20rpx 30rpx;
+  border-radius: 40rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+.search-icon {
+  font-size: 32rpx;
+  margin-right: 16rpx;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-color);
+}
+
+/* 分类筛选 */
+.filter-scroll {
+  white-space: nowrap;
+  background: var(--white);
+  margin: 0 20rpx 20rpx;
+  border-radius: 16rpx;
+  padding: 20rpx;
+}
+
+.filter-list {
+  display: inline-flex;
+}
+
+.filter-tag {
+  display: inline-block;
+  padding: 12rpx 28rpx;
+  margin-right: 16rpx;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  background: var(--bg-color);
+  color: var(--text-secondary);
+}
+
+.filter-tag.active {
+  background: var(--primary-light);
+  color: var(--primary-color);
+}
+
+/* 成分列表 */
+.ingredient-list {
+  padding: 0 20rpx;
+}
+
+.ingredient-card {
+  margin-bottom: 20rpx;
+}
+
+.ingredient-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.ingredient-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.risk-badge {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 4rpx;
+}
+
+.risk-1 {
+  background: #e8f8ee;
+  color: #07c160;
+}
+
+.risk-2 {
+  background: #fff8e6;
+  color: #ff9500;
+}
+
+.risk-3 {
+  background: #fff0e6;
+  color: #ff6b00;
+}
+
+.risk-4, .risk-5 {
+  background: #ffebeb;
+  color: #fa5151;
+}
+
+.ingredient-category {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-bottom: 8rpx;
+}
+
+.ingredient-desc {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 加载中 */
+.loading {
+  padding: 60rpx;
+  text-align: center;
+}
+
+.loading-text {
+  color: var(--text-light);
+  font-size: 28rpx;
+}

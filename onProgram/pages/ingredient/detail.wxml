@@ -1,0 +1,54 @@
+<!--pages/ingredient/detail.wxml-->
+<view class="page-detail">
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{ingredient}}">
+    <!-- 头部信息 -->
+    <view class="header-card card">
+      <view class="ingredient-name">{{ingredient.name}}</view>
+      <view class="ingredient-alias" wx:if="{{ingredient.alias}}">别名：{{ingredient.alias}}</view>
+      <view class="risk-badge risk-{{ingredient.risk_level}}">
+        <text wx:if="{{ingredient.risk_level == 1}}">安全</text>
+        <text wx:elif="{{ingredient.risk_level == 2}}">低风险</text>
+        <text wx:elif="{{ingredient.risk_level == 3}}">中风险</text>
+        <text wx:else>高风险</text>
+      </view>
+    </view>
+
+    <!-- 详细介绍 -->
+    <view class="card" wx:if="{{ingredient.description}}">
+      <view class="card-title">成分介绍</view>
+      <view class="desc-text">{{ingredient.description}}</view>
+    </view>
+
+    <!-- 功效 -->
+    <view class="card" wx:if="{{ingredient.effects}}">
+      <view class="card-title">主要功效</view>
+      <view class="desc-text">{{ingredient.effects}}</view>
+    </view>
+
+    <!-- 安全说明 -->
+    <view class="card" wx:if="{{ingredient.safety_info}}">
+      <view class="card-title">安全说明</view>
+      <view class="desc-text">{{ingredient.safety_info}}</view>
+    </view>
+
+    <!-- 含有此成分的产品 -->
+    <view class="card" wx:if="{{ingredient.products && ingredient.products.length}}">
+      <view class="card-title">含有此成分的产品</view>
+      <view class="product-list">
+        <view class="product-item" wx:for="{{ingredient.products}}" wx:key="id" bindtap="onProductTap" data-id="{{item.id}}">
+          <view class="product-name">{{item.name}}</view>
+          <view class="product-brand">{{item.brand}}</view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="empty-state" wx:else>
+    <text class="icon">🧪</text>
+    <text class="text">加载失败</text>
+  </view>
+</view>

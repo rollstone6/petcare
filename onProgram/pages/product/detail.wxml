@@ -1,0 +1,98 @@
+<!--pages/product/detail.wxml-->
+<view class="page-detail">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:elif="{{product}}">
+    <!-- 产品图片 -->
+    <view class="product-image">
+      <image src="{{product.image || '/images/placeholder.png'}}" mode="aspectFill" />
+    </view>
+
+    <!-- 基本信息 -->
+    <view class="info-card card">
+      <view class="product-name">{{product.name}}</view>
+      <view class="product-brand" bindtap="onBrandTap">
+        <text class="brand-text">{{product.brand}}</text>
+        <text class="arrow">›</text>
+      </view>
+      <view class="product-desc">{{product.description}}</view>
+      
+      <!-- 安全评分 -->
+      <view class="safety-score safety-bg-{{product.safety_score}}">
+        <view class="score-label">安全评分</view>
+        <view class="score-value safety-{{product.safety_score}}">{{product.safety_score}}/5</view>
+      </view>
+    </view>
+
+    <!-- 成分信息 -->
+    <view class="card" wx:if="{{product.ingredients && product.ingredients.length}}">
+      <view class="card-title">成分信息</view>
+      <view class="ingredient-list">
+        <view class="ingredient-item" wx:for="{{product.ingredients}}" wx:key="id" bindtap="onIngredientTap" data-id="{{item.id}}">
+          <view class="ingredient-name">{{item.name}}</view>
+          <view class="ingredient-risk risk-{{item.risk_level}}">
+            <text wx:if="{{item.risk_level == 1}}">安全</text>
+            <text wx:elif="{{item.risk_level == 2}}">低风险</text>
+            <text wx:elif="{{item.risk_level == 3}}">中风险</text>
+            <text wx:else>高风险</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 用户评价 -->
+    <view class="card">
+      <view class="card-title">用户评价</view>
+      
+      <view wx:if="{{reviews.length == 0}}" class="empty-reviews">
+        <text>暂无评价</text>
+      </view>
+
+      <view class="review-list" wx:else>
+        <view class="review-item" wx:for="{{reviews}}" wx:key="id">
+          <view class="review-header">
+            <view class="reviewer">{{item.user_name || '匿名用户'}}</view>
+            <view class="stars">
+              <text class="star {{item.rating >= 1 ? '' : 'star-empty'}}">★</text>
+              <text class="star {{item.rating >= 2 ? '' : 'star-empty'}}">★</text>
+              <text class="star {{item.rating >= 3 ? '' : 'star-empty'}}">★</text>
+              <text class="star {{item.rating >= 4 ? '' : 'star-empty'}}">★</text>
+              <text class="star {{item.rating >= 5 ? '' : 'star-empty'}}">★</text>
+            </view>
+          </view>
+          <view class="review-content">{{item.content}}</view>
+          <view class="review-time">{{item.created_at}}</view>
+        </view>
+
+        <view class="load-more" wx:if="{{hasMoreReviews}}" bindtap="onLoadMoreReviews">
+          加载更多评价
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作栏 -->
+    <view class="bottom-bar">
+      <view class="bar-btn {{isFavorite ? 'active' : ''}}" bindtap="onToggleFavorite">
+        <text class="icon">{{isFavorite ? '❤️' : '🤍'}}</text>
+        <text>{{isFavorite ? '已收藏' : '收藏'}}</text>
+      </view>
+      <view class="bar-btn" bindtap="onWriteReview">
+        <text class="icon">✏️</text>
+        <text>写评价</text>
+      </view>
+      <button class="bar-btn share-btn" open-type="share">
+        <text class="icon">📤</text>
+        <text>分享</text>
+      </button>
+    </view>
+  </block>
+
+  <!-- 加载失败 -->
+  <view class="empty-state" wx:else>
+    <text class="icon">😿</text>
+    <text class="text">加载失败</text>
+  </view>
+</view>
