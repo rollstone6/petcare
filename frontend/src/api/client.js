@@ -100,8 +100,10 @@ export const api = {
   getSchedules: () => request('/schedules'),
   getSchedulePresets: () => request('/schedules/presets/list'),
   createSchedule: (data) => request('/schedules', { method: 'POST', body: JSON.stringify(data) }),
+  updateSchedule: (id, data) => request(`/schedules/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   markScheduleDone: (id) => request(`/schedules/${id}/done`, { method: 'POST' }),
   deleteSchedule: (id) => request(`/schedules/${id}`, { method: 'DELETE' }),
+  updateSchedule: (id, data) => request(`/schedules/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   // ics 需要带 token 请求
   downloadIcs: async (id) => {
     const token = getToken()

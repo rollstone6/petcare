@@ -126,7 +126,7 @@ export default function QuickTags({ mode = 'search' }) {
         <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-medium text-gray-700">⚠️ 高危成分</h3>
-            <span className="text-xs text-gray-500">安全评分 ≤ 2</span>
+            <span className="text-xs text-gray-500">EWG评分 ≥ 7</span>
           </div>
           <div className="flex flex-wrap gap-2">
             {dangerousIngredients.map(ing => (

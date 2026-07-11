@@ -72,7 +72,7 @@ export default function BreedDetail() {
                 <span className="text-xs md:text-sm bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{breed.size || '中型'}</span>
               </div>
               {breed.description && (
-                <p className="text-sm md:text-base text-gray-600 mt-4 leading-relaxed">{breed.description}</p>
+                <p className="text-sm md:text-base text-gray-600 mt-4 leading-relaxed line-clamp-6">{breed.description}</p>
               )}
               {breed.common_issues && (
                 <div className="mt-4 p-3 md:p-4 bg-amber-50 rounded-xl">

@@ -80,7 +80,7 @@ class ProductListItem(BaseModel):
     brand: Optional[str] = None
     category: Optional[str] = None
     type: str
-    safety_score: float
+    safety_score: Optional[float] = 0.0
     image_url: Optional[str] = ""
     suitable_species: Optional[str] = "猫狗"
     target_size: Optional[str] = "全部"

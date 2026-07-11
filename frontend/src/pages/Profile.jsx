@@ -116,7 +116,7 @@ export default function Profile() {
 
       {/* 登录/注册弹窗 */}
       {showLogin && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowLogin(false)}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay" onClick={() => setShowLogin(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
             {/* Tab 切换 */}
             <div className="flex gap-1 bg-gray-100 rounded-lg p-1 mb-5">
@@ -276,7 +276,7 @@ export default function Profile() {
 
       {/* 我的评论弹窗 */}
       {showReviews && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowReviews(false)}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay" onClick={() => setShowReviews(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-gray-900 mb-4">💬 我的评论</h2>
             {myReviews.length === 0 ? (

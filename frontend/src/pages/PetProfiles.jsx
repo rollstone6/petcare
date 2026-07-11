@@ -187,14 +187,14 @@ export default function PetProfiles() {
                   <div className="flex gap-1">
                     <button
                       onClick={() => handleEdit(pet)}
-                      className="text-gray-400 hover:text-primary p-1.5 text-sm"
+                      className="text-gray-400 hover:text-primary p-3 text-sm touch-target"
                       title="编辑"
                     >
                       ✏️
                     </button>
                     <button
                       onClick={() => handleDelete(pet.id)}
-                      className="text-gray-400 hover:text-red-500 p-1.5 text-sm"
+                      className="text-gray-400 hover:text-red-500 p-3 text-sm touch-target"
                       title="删除"
                     >
                       🗑️
@@ -208,7 +208,7 @@ export default function PetProfiles() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowForm(false)}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay" onClick={() => setShowForm(false)}>
           <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-gray-900 mb-4">
               {editingPet ? '编辑宠物' : '添加宠物'}
@@ -226,7 +226,7 @@ export default function PetProfiles() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">品种</label>
+                <label className="block text-sm text-gray-700 mb-1">品种 <span className="text-red-500">*</span></label>
                 
                 {/* 第一步：选择物种 */}
                 <div className="mb-2">
@@ -259,9 +259,10 @@ export default function PetProfiles() {
                     <select
                       value={formData.breed_id}
                       onChange={e => setFormData({ ...formData, breed_id: e.target.value })}
+                      required
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white"
                     >
-                      <option value="">选择品种（可选）</option>
+                      <option value="">请选择品种</option>
                       {filteredBreeds.map(b => (
                         <option key={b.id} value={b.id}>{b.name}</option>
                       ))}
@@ -270,11 +271,12 @@ export default function PetProfiles() {
                 )}
               </div>
               <div>
-                <label className="block text-sm text-gray-700 mb-1">生日 🎂</label>
+                <label className="block text-sm text-gray-700 mb-1">生日 🎂 <span className="text-red-500">*</span></label>
                 <input
                   type="date"
                   value={formData.birthday}
                   onChange={e => setFormData({ ...formData, birthday: e.target.value })}
+                  required
                   max={new Date().toISOString().split('T')[0]}
                   className="w-full min-w-0 px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary"
                 />

@@ -8,8 +8,9 @@ import ReviewSection from '../components/ReviewSection'
 import BreedCompatibility from '../components/BreedCompatibility'
 
 const LEVEL_COLORS = {
-  5: 'bg-green-500', 4: 'bg-green-400',
-  3: 'bg-yellow-400', 2: 'bg-orange-400', 1: 'bg-red-500',
+  1: 'bg-green-500', 2: 'bg-green-400', 3: 'bg-green-400',
+  4: 'bg-yellow-400', 5: 'bg-yellow-500', 6: 'bg-orange-400',
+  7: 'bg-orange-500', 8: 'bg-red-400', 9: 'bg-red-500', 10: 'bg-red-600',
 }
 
 export default function ProductDetail() {
@@ -60,8 +61,9 @@ export default function ProductDetail() {
     )
   }
 
-  const score = product.safety_score || 0
-  const level = Math.min(5, Math.max(1, Math.round(score)))
+  const score = product.safety_score || 5
+  // EWG 1-10分制
+  const level = Math.min(10, Math.max(1, Math.round(score)))
 
   return (
     <div className="animate-fadeIn pb-4">
@@ -102,12 +104,12 @@ export default function ProductDetail() {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-gray-700">通用安全评分</p>
               <p className="text-[10px] text-gray-400">
-                {score >= 4 ? '安全可靠' : score >= 3 ? '基本安全' : score >= 2 ? '谨慎使用' : '风险较高'}
+                {score <= 2 ? '安全可靠' : score <= 4 ? '基本安全' : score <= 6 ? '谨慎使用' : '风险较高'}
               </p>
             </div>
             <div className="flex gap-0.5">
-              {[1,2,3,4,5].map(i => (
-                <div key={i} className={`w-2 h-2 rounded-full ${i <= level ? LEVEL_COLORS[level] : 'bg-gray-200'}`} />
+              {[1,2,3,4,5,6,7,8,9,10].map(i => (
+                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i <= level ? LEVEL_COLORS[level] : 'bg-gray-200'}`} />
               ))}
             </div>
           </div>
@@ -176,7 +178,7 @@ export default function ProductDetail() {
               {product.description && (
                 <div className="col-span-2">
                   <p className="text-gray-400 text-xs mb-1">产品描述</p>
-                  <p className="text-gray-700 text-xs md:text-sm leading-relaxed">{product.description}</p>
+                  <p className="text-gray-700 text-xs md:text-sm leading-relaxed line-clamp-6">{product.description}</p>
                 </div>
               )}
             </div>
@@ -299,7 +301,7 @@ function FeedingModal({ pets, product, productId, feedingPets, onClose, onUpdate
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-end justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center modal-overlay" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div className="relative bg-white rounded-t-3xl w-full max-w-md p-6 pb-20 animate-fadeIn max-h-[80vh] overflow-y-auto safe-bottom" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">

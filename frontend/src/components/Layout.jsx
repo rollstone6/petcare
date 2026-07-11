@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 
 const tabs = [
@@ -11,6 +12,25 @@ const tabs = [
 export default function Layout() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [keyboardHeight, setKeyboardHeight] = useState(0)
+
+  // 虚拟键盘适配：监听 visualViewport 变化
+  useEffect(() => {
+    const viewport = window.visualViewport
+    if (!viewport) return
+
+    const handleResize = () => {
+      const heightDiff = window.innerHeight - viewport.height - viewport.offsetTop
+      setKeyboardHeight(Math.max(0, heightDiff))
+    }
+
+    viewport.addEventListener('resize', handleResize)
+    viewport.addEventListener('scroll', handleResize)
+    return () => {
+      viewport.removeEventListener('resize', handleResize)
+      viewport.removeEventListener('scroll', handleResize)
+    }
+  }, [])
 
   const isActive = (tab) =>
     location.pathname === tab.path ||
@@ -66,8 +86,11 @@ export default function Layout() {
 
       {/* 手机端底部导航 */}
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 transition-transform duration-200"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          transform: `translateY(-${keyboardHeight}px)`,
+        }}
       >
         <div className="flex justify-around items-center h-14">
           {tabs.map(tab => {

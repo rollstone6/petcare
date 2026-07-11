@@ -26,7 +26,11 @@ export default function ProductCard({ product, compact = false }) {
     }
   }
 
-  const score = product.safety_score || 0
+  const score = product.safety_score || 5
+  // EWG 1-10分制：低分=安全，高分=风险
+  const isSafe = score <= 3
+  const isMedium = score > 3 && score <= 6
+  const isHigh = score > 6
 
   return (
     <div
@@ -69,18 +73,18 @@ export default function ProductCard({ product, compact = false }) {
         </button>
       </div>
 
-      {/* 评分条 */}
+      {/* 评分条 - EWG 1-10分制 */}
       <div className={`flex items-center gap-2 ${compact ? 'mt-2 md:mt-3' : 'mt-3 md:mt-4'}`}>
         <div className="flex-1 bg-gray-100 rounded-full h-1.5 md:h-2 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all duration-500 ${
-              score >= 4 ? 'bg-green-500' : score >= 3 ? 'bg-yellow-500' : 'bg-red-500'
+              isSafe ? 'bg-green-500' : isMedium ? 'bg-yellow-500' : 'bg-red-500'
             }`}
-            style={{ width: `${(score / 5) * 100}%` }}
+            style={{ width: `${(score / 10) * 100}%` }}
           />
         </div>
         <span className={`font-bold flex-shrink-0 ${
-          score >= 4 ? 'text-green-500' : score >= 3 ? 'text-yellow-500' : 'text-red-500'
+          isSafe ? 'text-green-500' : isMedium ? 'text-yellow-500' : 'text-red-500'
         } ${compact ? 'text-xs md:text-sm' : 'text-sm md:text-base'}`}>
           {score.toFixed(1)}
         </span>

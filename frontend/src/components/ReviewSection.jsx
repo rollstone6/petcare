@@ -220,7 +220,7 @@ export default function ReviewSection({ productId }) {
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-3">
                   {review.avatar_url ? (
-                    <img src={review.avatar_url} alt="" loading="lazy" className="w-10 h-10 rounded-full" />
+                    <img src={review.avatar_url} alt="" loading="lazy" className="w-10 h-10 rounded-full aspect-square object-cover bg-gray-100" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
                       {review.nickname?.[0] || '匿'}

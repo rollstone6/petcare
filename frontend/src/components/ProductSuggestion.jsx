@@ -162,10 +162,10 @@ export default function ProductSuggestion({ searchQuery, onClose }) {
         <div className="border-2 border-dashed border-gray-300 rounded-xl p-4 text-center hover:border-primary transition-colors">
           {imagePreview ? (
             <div className="relative">
-              <img src={imagePreview} alt="预览" className="max-h-48 mx-auto rounded-lg" />
+              <img src={imagePreview} alt="预览" className="max-h-48 mx-auto rounded-lg aspect-video object-cover" />
               <button
                 onClick={() => { setImageFile(null); setImagePreview('') }}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600"
+                className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-12 h-12 flex items-center justify-center hover:bg-red-600 touch-target"
               >
                 ×
               </button>
@@ -322,7 +322,7 @@ export default function ProductSuggestion({ searchQuery, onClose }) {
   )
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center modal-overlay" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div
         className="relative bg-white rounded-t-3xl md:rounded-3xl w-full max-w-md max-h-[90vh] overflow-y-auto safe-bottom"

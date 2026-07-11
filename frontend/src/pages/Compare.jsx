@@ -98,7 +98,7 @@ export default function Compare() {
                       <td className="p-3 md:p-4 text-gray-500">安全评分</td>
                       {selectedProducts.map(p => (
                         <td key={p.id} className="p-3 md:p-4 text-center">
-                          <span className={`font-bold ${p.safety_score >= 4 ? 'text-green-500' : p.safety_score >= 3 ? 'text-yellow-500' : 'text-red-500'}`}>
+                          <span className={`font-bold ${p.safety_score <= 3 ? 'text-green-500' : p.safety_score <= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
                             ⭐ {p.safety_score}
                           </span>
                         </td>
@@ -131,7 +131,7 @@ export default function Compare() {
                     <div className="text-sm md:text-base font-medium text-gray-900 truncate">{p.name}</div>
                     <div className="text-xs md:text-sm text-gray-400">{p.brand} · {p.category}</div>
                   </div>
-                  <span className={`text-sm md:text-base font-bold ${p.safety_score >= 4 ? 'text-green-500' : 'text-yellow-500'}`}>
+                  <span className={`text-sm md:text-base font-bold ${p.safety_score <= 3 ? 'text-green-500' : 'text-yellow-500'}`}>
                     {p.safety_score}
                   </span>
                 </div>

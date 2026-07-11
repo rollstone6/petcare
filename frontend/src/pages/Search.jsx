@@ -21,10 +21,11 @@ const sortOptions = [
 const PAGE_SIZE = 20
 
 function safetyLabel(score) {
-  if (score >= 4.5) return { text: '优秀', cls: 'bg-emerald-100 text-emerald-700' }
-  if (score >= 3.5) return { text: '良好', cls: 'bg-green-100 text-green-700' }
-  if (score >= 2.5) return { text: '一般', cls: 'bg-yellow-100 text-yellow-700' }
-  if (score >= 1.5) return { text: '慎用', cls: 'bg-orange-100 text-orange-700' }
+  // EWG 1-10分制：低分=安全
+  if (score <= 2) return { text: '优秀', cls: 'bg-emerald-100 text-emerald-700' }
+  if (score <= 3) return { text: '良好', cls: 'bg-green-100 text-green-700' }
+  if (score <= 5) return { text: '一般', cls: 'bg-yellow-100 text-yellow-700' }
+  if (score <= 7) return { text: '慎用', cls: 'bg-orange-100 text-orange-700' }
   return { text: '高危', cls: 'bg-red-100 text-red-700' }
 }
 
@@ -535,7 +536,7 @@ export default function Search() {
                     {selectedProducts.map(p => (
                       <th key={p.id} className="p-3 text-center font-medium text-gray-900 min-w-[110px]">
                         {p.image_url && (
-                          <img src={p.image_url} alt="" loading="lazy" className="w-12 h-12 object-cover rounded-lg mx-auto mb-1.5" />
+                          <img src={p.image_url} alt="" loading="lazy" className="w-12 h-12 aspect-square object-cover rounded-lg mx-auto mb-1.5 bg-gray-100" />
                         )}
                         <div className="truncate">{p.name}</div>
                       </th>
@@ -639,13 +640,13 @@ export default function Search() {
                         {selected.includes(p.id) && <span className="text-white text-xs">✓</span>}
                       </div>
                       {p.image_url && (
-                        <img src={p.image_url} alt="" loading="lazy" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                        <img src={p.image_url} alt="" loading="lazy" className="w-10 h-10 aspect-square rounded-lg object-cover shrink-0 bg-gray-100" />
                       )}
                       <div className="flex-1 min-w-0" onClick={(e) => { e.stopPropagation(); navigate(`/product/${p.id}`) }}>
                         <div className="text-sm font-medium text-gray-900 truncate">{p.name}</div>
-                        <div className="text-xs text-gray-400">{p.brand} · {p.category}</div>
+                        <div className="text-xs text-gray-400 truncate">{p.brand} · {p.category}</div>
                       </div>
-                      <span className={`text-sm font-bold ${p.safety_score >= 4 ? 'text-green-500' : p.safety_score >= 2.5 ? 'text-yellow-500' : 'text-red-500'}`}>
+                      <span className={`text-sm font-bold ${p.safety_score <= 3 ? 'text-green-500' : p.safety_score <= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
                         {p.safety_score.toFixed(1)}
                       </span>
                     </div>

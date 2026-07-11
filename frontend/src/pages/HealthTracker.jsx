@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { FreeMode, Mousewheel } from 'swiper/modules'
@@ -88,26 +88,30 @@ function PetPicker({ pets, value, onChange }) {
 }
 
 // ===== 倒计时圆环 =====
-function CountdownCircle({ daysLeft, status }) {
+function CountdownCircle({ daysLeft, status, size = 'md' }) {
   const c = STATUS_COLORS[status] || STATUS_COLORS.normal
   const isOverdue = status === 'overdue'
+  const dim = size === 'sm' ? 'w-12 h-12' : 'w-20 h-20'
+  const fontSize = size === 'sm' ? 'text-base' : 'text-lg'
+  const labelSize = size === 'sm' ? 'text-[8px]' : 'text-[10px]'
+  const strokeW = size === 'sm' ? '6' : '5'
   return (
-    <div className="relative w-16 h-16 flex-shrink-0">
-      <svg className="w-16 h-16 -rotate-90" viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="42" fill="none" stroke="#e5e7eb" strokeWidth="8" />
+    <div className={`relative ${dim} flex-shrink-0`}>
+      <svg className={`${dim} -rotate-90`} viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="#e5e7eb" strokeWidth={strokeW} />
         <circle cx="50" cy="50" r="42" fill="none"
           stroke={isOverdue ? '#ef4444' : daysLeft <= 3 ? '#f97316' : daysLeft <= 7 ? '#eab308' : '#22c55e'}
-          strokeWidth="8" strokeLinecap="round"
+          strokeWidth={strokeW} strokeLinecap="round"
           strokeDasharray={`${2 * Math.PI * 42}`}
           strokeDashoffset={`${2 * Math.PI * 42 * (1 - Math.min((daysLeft || 0) / 30, 1))}`}
           className="transition-all duration-700"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-base font-bold ${c.text}`}>
+        <span className={`${fontSize} font-bold ${c.text} leading-none`}>
           {isOverdue ? `+${Math.abs(daysLeft)}` : daysLeft ?? '--'}
         </span>
-        <span className="text-[9px] text-gray-400">{isOverdue ? '天超' : '天后'}</span>
+        <span className={`${labelSize} text-gray-400 mt-0.5`}>{isOverdue ? '天超' : '天后'}</span>
       </div>
     </div>
   )
@@ -306,7 +310,7 @@ function RecordForm({ pets, onClose, onSaved }) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-end justify-center" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center modal-overlay" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
       <div className="relative bg-white rounded-t-3xl w-full max-w-md p-6 pb-20 animate-fadeIn max-h-[90vh] overflow-y-auto safe-bottom" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
@@ -399,6 +403,9 @@ function ScheduleTab({ pets }) {
   const [showAdd, setShowAdd] = useState(false)
   const [actionId, setActionId] = useState(null)
   const [petFilter, setPetFilter] = useState('')
+  const [editingSchedule, setEditingSchedule] = useState(null)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [toast, setToast] = useState(null)
   const loggedIn = !!getToken()
 
   const loadData = () => {
@@ -411,15 +418,34 @@ function ScheduleTab({ pets }) {
 
   const handleMarkDone = async (id) => {
     setActionId(id)
-    try { await api.markScheduleDone(id); loadData() } catch (e) { alert(e.message) }
+    try {
+      await api.markScheduleDone(id)
+      loadData()
+      // 计算下次提醒日期
+      const schedule = schedules.find(s => s.id === id)
+      if (schedule) {
+        const nextDate = new Date()
+        nextDate.setDate(nextDate.getDate() + schedule.interval_days)
+        const month = nextDate.getMonth() + 1
+        const day = nextDate.getDate()
+        setToast(`✅ 已标记完成！下次提醒: ${month}月${day}日`)
+        setTimeout(() => setToast(null), 3000)
+      }
+    } catch (e) { alert(e.message) }
     finally { setActionId(null) }
   }
+
+  const handleUpdate = async (id, data) => {
+    setEditingSchedule(null)
+    try { await api.updateSchedule(id, data); loadData() } catch (e) { alert(e.message) }
+  }
+
   const handleDelete = async (id) => {
-    if (!confirm('确定删除这个日程吗？')) return
     setActionId(id)
     try { await api.deleteSchedule(id); loadData() } catch (e) { alert(e.message) }
-    finally { setActionId(null) }
+    finally { setActionId(null); setDeleteConfirm(null) }
   }
+
   const handleAdd = async (data) => {
     setShowAdd(false)
     try { await api.createSchedule(data); loadData() } catch (e) { alert(e.message) }
@@ -491,140 +517,130 @@ function ScheduleTab({ pets }) {
           <p className="text-gray-400 mb-2">{petFilter ? `${petFilter} 还没有日程提醒` : '还没有日程提醒'}</p>
           <p className="text-sm text-gray-300 mb-4">添加宠物后会自动生成智能提醒</p>
           
-          {/* 年龄适配提醒建议 */}
+          {/* 快速添加入口 */}
           {pets.length > 0 && (
-            <div className="mt-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4 text-left">
-              <h4 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <span>🎯</span>
-                <span>根据宠物年龄推荐的提醒</span>
+            <div className="mt-6 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-4">
+              <h4 className="font-semibold text-sm mb-3 flex items-center justify-center gap-2">
+                <span>⚡</span>
+                <span>快速添加提醒</span>
               </h4>
-              <div className="space-y-2">
-                {pets.slice(0, 3).map(pet => {
-                  const ageCategory = pet.age_category || '成年'
-                  const species = pet.breed?.species === '猫' ? '🐱' : '🐶'
-                  
-                  // 根据年龄分类显示不同的提醒建议
-                  const recommendations = {
-                    '幼崽': [
-                      { icon: '💉', text: '疫苗（每2-4周一次）', color: 'text-pink-600' },
-                      { icon: '🦟', text: '体外驱虫（每月）', color: 'text-pink-600' },
-                      { icon: '💊', text: '体内驱虫（每2周）', color: 'text-pink-600' },
-                    ],
-                    '幼年': [
-                      { icon: '💉', text: '疫苗加强针', color: 'text-blue-600' },
-                      { icon: '🦟', text: '体外驱虫（每月）', color: 'text-blue-600' },
-                      { icon: '💊', text: '体内驱虫（每月→每3月）', color: 'text-blue-600' },
-                    ],
-                    '成年': [
-                      { icon: '💉', text: '疫苗（每年）', color: 'text-green-600' },
-                      { icon: '🦟', text: '体外驱虫（每月）', color: 'text-green-600' },
-                      { icon: '💊', text: '体内驱虫（每3月）', color: 'text-green-600' },
-                      { icon: '🩺', text: '体检（每半年）', color: 'text-green-600' },
-                    ],
-                    '老年': [
-                      { icon: '💉', text: '疫苗（根据抗体水平）', color: 'text-purple-600' },
-                      { icon: '🦟', text: '体外驱虫（每月）', color: 'text-purple-600' },
-                      { icon: '💊', text: '体内驱虫（每3月）', color: 'text-purple-600' },
-                      { icon: '🩺', text: '体检（每3月）', color: 'text-purple-600' },
-                      { icon: '🦷', text: '牙齿检查（每半年）', color: 'text-purple-600' },
-                    ],
-                  }
-                  
-                  const recs = recommendations[ageCategory] || recommendations['成年']
-                  
-                  return (
-                    <div key={pet.id} className="bg-white rounded-xl p-3 shadow-sm">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span>{species}</span>
-                        <span className="font-medium text-sm">{pet.pet_name}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          ageCategory === '幼崽' ? 'bg-pink-100 text-pink-600' :
-                          ageCategory === '幼年' ? 'bg-blue-100 text-blue-600' :
-                          ageCategory === '成年' ? 'bg-green-100 text-green-600' :
-                          'bg-purple-100 text-purple-600'
-                        }`}>
-                          {ageCategory}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {recs.map((rec, idx) => (
-                          <div key={idx} className={`text-xs flex items-center gap-1 ${rec.color}`}>
-                            <span>{rec.icon}</span>
-                            <span>{rec.text}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )
-                })}
+              <div className="grid grid-cols-2 gap-3">
+                {presets.slice(0, 4).map(p => (
+                  <button key={p.type} onClick={() => handleAdd({ schedule_type: p.type, pet_name: pets[0]?.pet_name })}
+                    className="bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow flex flex-col items-center gap-2">
+                    <span className="text-2xl">{p.icon}</span>
+                    <span className="text-xs font-medium">{p.title}</span>
+                  </button>
+                ))}
               </div>
-              <p className="text-xs text-gray-500 mt-3">
-                💡 添加宠物时设置生日，系统会自动生成适合的提醒
-              </p>
             </div>
           )}
           
           <button onClick={() => setShowAdd(true)}
             className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-medium mt-4">
-            添加第一个日程
+            查看更多选项
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {filteredSchedules.map(s => {
-            const c = STATUS_COLORS[s.status] || STATUS_COLORS.normal
-            const icon = SCHEDULE_ICONS[s.schedule_type] || '📅'
-            const isActive = actionId === s.id
-            const pet = pets.find(p => p.pet_name === s.pet_name)
-            const ageCategory = pet?.age_category
-            return (
-              <div key={s.id}
-                className={`bg-white rounded-2xl p-3 shadow-sm border transition-all ${
-                  s.status === 'overdue' ? 'border-red-200 ring-2 ring-red-100' :
-                  s.status === 'urgent' ? 'border-orange-200 ring-2 ring-orange-100' :
-                  s.status === 'warning' ? 'border-yellow-200 ring-1 ring-yellow-100' :
-                  'border-gray-100'
-                }`}>
-                <div className="flex items-center gap-3">
-                  <CountdownCircle daysLeft={s.days_left} status={s.status} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-base">{icon}</span>
-                      <span className="font-semibold text-sm">{s.title}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.bg} text-white`}>{c.label}</span>
-                    </div>
-                    <p className="text-xs text-gray-400">
-                      <span className="inline-flex items-center gap-0.5">
-                        {pet?.breed?.species === '猫' ? '🐱' : '🐶'} {s.pet_name}
-                        {pet?.breed ? ` (${pet.breed.name})` : ''}
-                        {ageCategory && (
-                          <span className={`ml-1 px-1.5 py-0.5 rounded text-xs ${
-                            ageCategory === '幼崽' ? 'bg-pink-100 text-pink-600' :
-                            ageCategory === '幼年' ? 'bg-blue-100 text-blue-600' :
-                            ageCategory === '成年' ? 'bg-green-100 text-green-600' :
-                            'bg-purple-100 text-purple-600'
-                          }`}>
-                            {ageCategory}
-                          </span>
-                        )}
-                      </span>
-                      {' · '}每{s.interval_days}天 · 上次: {s.last_done_at ? new Date(s.last_done_at).toLocaleDateString('zh-CN') : '未记录'}
-                    </p>
+        <div className="space-y-4">
+          {(() => {
+            // 按宠物分组
+            const grouped = {}
+            filteredSchedules.forEach(s => {
+              if (!grouped[s.pet_name]) grouped[s.pet_name] = []
+              grouped[s.pet_name].push(s)
+            })
+            return Object.entries(grouped).map(([petName, items]) => {
+              const pet = pets.find(p => p.pet_name === petName)
+              const speciesIcon = pet?.breed?.species === '猫' ? '🐱' : '🐶'
+              return (
+                <div key={petName}>
+                  {/* 宠物标题行 */}
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <span className="text-base">{speciesIcon}</span>
+                    <span className="font-semibold text-sm">{petName}</span>
+                    {pet?.breed && <span className="text-xs text-gray-400">({pet.breed.name})</span>}
+                    <span className="text-xs text-gray-400 ml-auto">{items.length} 个提醒</span>
                   </div>
+                  {/* 该宠物的日程横向滑动 */}
+                  <Swiper
+                    modules={[FreeMode, Mousewheel]}
+                    spaceBetween={10}
+                    slidesPerView={2.3}
+                    breakpoints={{
+                      640: { slidesPerView: 3.2 },
+                      1024: { slidesPerView: 4.2 },
+                    }}
+                    freeMode={true}
+                    mousewheel={{ forceToAxis: true }}
+                    className="schedule-swiper select-none"
+                  >
+                    {items.map(s => {
+                      const c = STATUS_COLORS[s.status] || STATUS_COLORS.normal
+                      const icon = SCHEDULE_ICONS[s.schedule_type] || '📅'
+                      const isActive = actionId === s.id
+
+                      let nextDueText = '未开始'
+                      if (s.last_done_at) {
+                        const nextDate = new Date(s.next_due_at || (new Date(s.last_done_at).getTime() + s.interval_days * 86400000))
+                        nextDueText = `${nextDate.getMonth() + 1}月${nextDate.getDate()}日`
+                      }
+
+                      const statusIcon = s.status === 'overdue' ? '❗' : s.status === 'urgent' ? '⚡' : ''
+
+                      return (
+                        <SwiperSlide key={s.id} className="!h-auto pb-2">
+                          <div className={`bg-white rounded-2xl p-3 shadow-sm border transition-all h-full flex flex-col ${
+                            s.status === 'overdue' ? 'border-red-200 ring-2 ring-red-100' :
+                            s.status === 'urgent' ? 'border-orange-200 ring-2 ring-orange-100' :
+                            s.status === 'warning' ? 'border-yellow-200 ring-1 ring-yellow-100' :
+                            'border-gray-100'
+                          }`}>
+                            {/* 倒计时圈 + 状态 */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="w-10 h-10 flex-shrink-0">
+                                <CountdownCircle daysLeft={s.days_left} status={s.status} size="sm" />
+                              </div>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.bg} text-white flex items-center gap-0.5`}>
+                                {statusIcon && <span>{statusIcon}</span>}
+                                <span>{c.label}</span>
+                              </span>
+                            </div>
+                            {/* 标题 */}
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="text-sm">{icon}</span>
+                              <span className="font-semibold text-xs">{s.title}</span>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-0.5">
+                              每{s.interval_days}天
+                            </p>
+                            <p className="text-xs text-gray-600 mb-2">
+                              下次: <span className="font-semibold text-primary">{nextDueText}</span>
+                            </p>
+                            {/* 操作按钮 */}
+                            <div className="flex gap-1 mt-auto pt-2 border-t border-gray-100">
+                              <button onClick={() => handleMarkDone(s.id)} disabled={isActive}
+                                className="flex-1 py-1 text-xs bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
+                                {isActive ? '...' : '✅ 完成'}
+                              </button>
+                              <button onClick={() => setEditingSchedule(s)} disabled={isActive}
+                                className="py-1 px-2 text-xs border border-gray-200 rounded-lg text-gray-500 hover:text-primary hover:border-primary transition-colors disabled:opacity-50">
+                                ✏️
+                              </button>
+                              <button onClick={() => setDeleteConfirm(s)} disabled={isActive}
+                                className="py-1 px-2 text-xs border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors disabled:opacity-50">
+                                🗑
+                              </button>
+                            </div>
+                          </div>
+                        </SwiperSlide>
+                      )
+                    })}
+                  </Swiper>
                 </div>
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-50">
-                  <button onClick={() => handleMarkDone(s.id)} disabled={isActive}
-                    className="flex-1 py-2 text-sm bg-primary text-white rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50">
-                    {isActive ? '处理中...' : '✅ 标记完成'}
-                  </button>
-                  <button onClick={() => handleDelete(s.id)} disabled={isActive}
-                    className="py-2 px-3 text-sm border border-gray-200 rounded-xl text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors disabled:opacity-50">
-                    🗑
-                  </button>
-                </div>
-              </div>
-            )
-          })}
+              )
+            })
+          })()}
         </div>
       )}
 
@@ -637,6 +653,9 @@ function ScheduleTab({ pets }) {
       )}
 
       {showAdd && <AddScheduleModal pets={pets} presets={presets} onClose={() => setShowAdd(false)} onAdd={handleAdd} />}
+      {editingSchedule && <EditScheduleModal schedule={editingSchedule} pets={pets} onClose={() => setEditingSchedule(null)} onUpdate={handleUpdate} />}
+      {deleteConfirm && <DeleteConfirmModal schedule={deleteConfirm} onClose={() => setDeleteConfirm(null)} onConfirm={() => handleDelete(deleteConfirm.id)} />}
+      {toast && <Toast message={toast} />}
     </div>
   )
 }
@@ -645,30 +664,133 @@ function ScheduleTab({ pets }) {
 function AddScheduleModal({ pets, presets, onClose, onAdd }) {
   const [selected, setSelected] = useState(null)
   const [petName, setPetName] = useState(pets[0]?.pet_name || '')
+  const isDraggingRef = useRef(false)
+  const startXRef = useRef(0)
+  const scrollLeftRef = useRef(0)
+  const currentScrollRef = useRef(null)
+
+  const handleMouseDown = (e, scrollContainer) => {
+    isDraggingRef.current = true
+    startXRef.current = e.pageX - scrollContainer.offsetLeft
+    scrollLeftRef.current = scrollContainer.scrollLeft
+    currentScrollRef.current = scrollContainer
+    scrollContainer.style.cursor = 'grabbing'
+  }
+
+  const handleMouseUp = (scrollContainer) => {
+    isDraggingRef.current = false
+    if (scrollContainer) scrollContainer.style.cursor = 'grab'
+    currentScrollRef.current = null
+  }
+
+  const handleMouseMove = (e) => {
+    if (!isDraggingRef.current || !currentScrollRef.current) return
+    e.preventDefault()
+    const x = e.pageX - currentScrollRef.current.offsetLeft
+    const walk = (x - startXRef.current) * 2
+    currentScrollRef.current.scrollLeft = scrollLeftRef.current - walk
+  }
 
   if (selected) {
     const p = presets.find(x => x.type === selected)
     return createPortal(
-      <div className="fixed inset-0 bg-black/50 z-[60] flex items-end md:items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-white rounded-2xl w-full max-w-sm p-6 pb-20 animate-slideUp safe-bottom" onClick={e => e.stopPropagation()}>
+      <div className="fixed inset-0 bg-black/50 z-[60] flex items-end md:items-center justify-center p-4 modal-overlay" onClick={onClose}>
+        <div className="bg-white rounded-2xl w-full max-w-sm max-h-[85vh] overflow-y-auto p-6 pb-20 animate-slideUp safe-bottom" onClick={e => e.stopPropagation()}>
           <h3 className="text-lg font-bold mb-4">确认添加</h3>
-          <div className="space-y-3 mb-6">
+          <div className="space-y-4 mb-6">
             {/* 宠物选择 */}
             <PetPicker pets={pets} value={petName} onChange={setPetName} />
+            
+            {/* 日程基本信息 */}
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
               <span className="text-2xl">{p.icon}</span>
-              <div>
+              <div className="flex-1">
                 <p className="font-medium text-sm">{p.title}</p>
-                <p className="text-xs text-gray-400">每 {p.interval_days} 天 · {p.note}</p>
+                <p className="text-xs text-gray-500">默认周期：每 {p.interval_days} 天</p>
+                <p className="text-xs text-gray-400 mt-1">{p.note}</p>
               </div>
             </div>
+
+            {/* 周期规则说明 - 滑动卡片 */}
+            {p.rules && p.rules.length > 0 && (
+              <div className="bg-blue-50 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                  <span>📋</span>
+                  <span>周期规则建议</span>
+                  <span className="text-[10px] text-blue-400 ml-auto font-normal">← 左右滑动 →</span>
+                </h4>
+                <div
+                  className="flex gap-2.5 overflow-x-auto scroll-smooth select-none"
+                  style={{
+                    scrollSnapType: 'x mandatory',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    cursor: 'grab',
+                    userSelect: 'none',
+                  }}
+                  onMouseDown={(e) => { e.preventDefault(); handleMouseDown(e, e.currentTarget) }}
+                  onMouseUp={(e) => handleMouseUp(e.currentTarget)}
+                  onMouseLeave={(e) => handleMouseUp(e.currentTarget)}
+                  onMouseMove={handleMouseMove}
+                  onDragStart={(e) => e.preventDefault()}
+                >
+                  {p.rules.map((rule, idx) => (
+                    <div key={idx} className="flex-shrink-0 w-[200px] pointer-events-none" style={{ scrollSnapAlign: 'start' }}>
+                      <div className="bg-white rounded-lg p-3 border border-blue-100 h-[110px] flex flex-col">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[11px] font-medium text-blue-800 leading-tight flex-1 mr-2">{rule.stage}</span>
+                          <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                            每{rule.interval}天
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-gray-600 leading-relaxed flex-1">{rule.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 注意事项 - 滑动卡片 */}
+            {p.tips && p.tips.length > 0 && (
+              <div className="bg-amber-50 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                  <span>💡</span>
+                  <span>注意事项</span>
+                  <span className="text-[10px] text-amber-400 ml-auto font-normal">← 左右滑动 →</span>
+                </h4>
+                <div
+                  className="flex gap-2.5 overflow-x-auto scroll-smooth select-none"
+                  style={{
+                    scrollSnapType: 'x mandatory',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    cursor: 'grab',
+                    userSelect: 'none',
+                  }}
+                  onMouseDown={(e) => { e.preventDefault(); handleMouseDown(e, e.currentTarget) }}
+                  onMouseUp={(e) => handleMouseUp(e.currentTarget)}
+                  onMouseLeave={(e) => handleMouseUp(e.currentTarget)}
+                  onMouseMove={handleMouseMove}
+                  onDragStart={(e) => e.preventDefault()}
+                >
+                  {p.tips.map((tip, idx) => (
+                    <div key={idx} className="flex-shrink-0 w-[180px] pointer-events-none" style={{ scrollSnapAlign: 'start' }}>
+                      <div className="bg-white rounded-lg p-3 border border-amber-100 h-[80px] flex items-center">
+                        <p className="text-[11px] text-amber-800 leading-relaxed">{tip}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 sticky bottom-0 bg-white pt-2">
             <button onClick={() => setSelected(null)}
-              className="flex-1 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl">返回</button>
+              className="flex-1 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50">返回</button>
             <button onClick={() => onAdd({ schedule_type: selected, pet_name: petName })}
               disabled={!petName}
-              className="flex-1 py-2.5 text-sm bg-primary text-white rounded-xl font-medium disabled:opacity-50">确认添加</button>
+              className="flex-1 py-2.5 text-sm bg-primary text-white rounded-xl font-medium disabled:opacity-50 hover:bg-primary/90">确认添加</button>
           </div>
         </div>
       </div>,
@@ -677,7 +799,7 @@ function AddScheduleModal({ pets, presets, onClose, onAdd }) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/50 z-[60] flex items-end md:items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-end md:items-center justify-center p-4 modal-overlay" onClick={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-sm p-6 pb-20 animate-slideUp safe-bottom" onClick={e => e.stopPropagation()}>
         <h3 className="text-lg font-bold mb-4">添加日程提醒</h3>
         <div className="space-y-2">
@@ -693,6 +815,151 @@ function AddScheduleModal({ pets, presets, onClose, onAdd }) {
             </button>
           ))}
         </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+// ===== 编辑日程弹窗 =====
+function EditScheduleModal({ schedule, pets, onClose, onUpdate }) {
+  const [intervalDays, setIntervalDays] = useState(schedule.interval_days)
+  const [petName, setPetName] = useState(schedule.pet_name)
+  const [note, setNote] = useState(schedule.note || '')
+  const [saving, setSaving] = useState(false)
+
+  // 不同类型日程的合理范围
+  const INTERVAL_RANGE = {
+    '体外驱虫': { min: 7, max: 90, label: '建议 7~90 天' },
+    '体内驱虫': { min: 7, max: 365, label: '建议 7~365 天' },
+    '疫苗': { min: 21, max: 730, label: '建议 21~730 天（3周~2年）' },
+    '体检': { min: 30, max: 365, label: '建议 30~365 天' },
+  }
+  const range = INTERVAL_RANGE[schedule.schedule_type] || { min: 1, max: 365, label: '1~365 天' }
+
+  const handleSubmit = async () => {
+    const clamped = Math.min(Math.max(Number(intervalDays) || 1, range.min), range.max)
+    setSaving(true)
+    try {
+      await onUpdate(schedule.id, { interval_days: clamped, pet_name: petName, note })
+    } catch (e) {
+      alert(e.message)
+      setSaving(false)
+    }
+  }
+
+  const displayDays = Number(intervalDays) || 0
+  const isOutOfRange = displayDays < range.min || displayDays > range.max
+
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-end md:items-center justify-center p-4 modal-overlay" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-sm max-h-[85vh] overflow-y-auto p-6 pb-20 animate-slideUp safe-bottom" onClick={e => e.stopPropagation()}>
+        <h3 className="text-lg font-bold mb-4">编辑日程</h3>
+        <div className="space-y-4 mb-6">
+          {/* 宠物选择 - 按钮组 */}
+          <PetPicker pets={pets} value={petName} onChange={setPetName} />
+
+          {/* 间隔天数 */}
+          <div>
+            <label className="text-xs text-gray-500 mb-1 flex justify-between">
+              <span>间隔天数</span>
+              <span className="text-gray-400">{range.label}</span>
+            </label>
+            <input type="number" value={intervalDays} onChange={e => setIntervalDays(e.target.value)}
+              min={range.min} max={range.max} step="1"
+              className={`w-full px-4 py-2.5 border rounded-xl text-sm outline-none transition-colors ${
+                isOutOfRange ? 'border-red-300 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-primary'
+              }`} />
+            {isOutOfRange && displayDays > 0 && (
+              <p className="text-xs text-red-500 mt-1">
+                ⚠️ 超出范围，保存时会自动调整为 {range.min}~{range.max} 天
+              </p>
+            )}
+            {/* 常用天数快捷按钮 */}
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {[
+                { label: '每2周', days: 14 },
+                { label: '每月', days: 30 },
+                { label: '每3月', days: 90 },
+                { label: '每半年', days: 180 },
+                { label: '每年', days: 365 },
+              ].filter(o => o.days >= range.min && o.days <= range.max)
+                .map(o => (
+                  <button key={o.days} onClick={() => setIntervalDays(o.days)}
+                    className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                      intervalDays === o.days
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-primary'
+                    }`}>
+                    {o.label}
+                  </button>
+                ))}
+            </div>
+          </div>
+
+          {/* 备注 */}
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">备注</label>
+            <textarea value={note} onChange={e => setNote(e.target.value)}
+              placeholder="添加备注..." rows={3} maxLength={200}
+              className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary resize-none" />
+            <p className="text-xs text-gray-400 text-right mt-0.5">{note.length}/200</p>
+          </div>
+
+          {/* 日程信息 */}
+          <div className="p-3 bg-gray-50 rounded-xl">
+            <p className="text-xs text-gray-500 mb-1">日程类型</p>
+            <p className="font-medium text-sm flex items-center gap-2">
+              <span className="text-xl">{SCHEDULE_ICONS[schedule.schedule_type] || '📅'}</span>
+              <span>{schedule.title}</span>
+            </p>
+          </div>
+        </div>
+        <div className="flex gap-3 sticky bottom-0 bg-white pt-2">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50">取消</button>
+          <button onClick={handleSubmit} disabled={saving || !petName}
+            className="flex-1 py-2.5 text-sm bg-primary text-white rounded-xl font-medium disabled:opacity-50 hover:bg-primary/90">
+            {saving ? '保存中...' : '保存'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+// ===== 删除确认弹窗 =====
+function DeleteConfirmModal({ schedule, onClose, onConfirm }) {
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 z-[60] flex items-end justify-center p-4 modal-overlay" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-sm p-6 pb-20 animate-slideUp safe-bottom" onClick={e => e.stopPropagation()}>
+        <div className="text-center mb-6">
+          <div className="text-5xl mb-3">🗑️</div>
+          <h3 className="text-lg font-bold mb-2">确定删除吗？</h3>
+          <p className="text-sm text-gray-500">
+            确定删除 <span className="font-medium">{schedule.title}</span> 吗？
+          </p>
+          <p className="text-xs text-gray-400 mt-1">此操作无法撤销</p>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose}
+            className="flex-1 py-2.5 text-sm text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50">取消</button>
+          <button onClick={onConfirm}
+            className="flex-1 py-2.5 text-sm bg-red-500 text-white rounded-xl font-medium hover:bg-red-600">删除</button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+// ===== Toast 提示 =====
+function Toast({ message }) {
+  return createPortal(
+    <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] animate-slideDown">
+      <div className="bg-gray-800 text-white px-6 py-3 rounded-xl shadow-lg text-sm">
+        {message}
       </div>
     </div>,
     document.body
@@ -967,7 +1234,7 @@ function DiaryForm({ feedingLog, day, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 modal-overlay" onClick={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold">记录第 {day} 天观察</h3>

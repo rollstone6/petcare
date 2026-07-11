@@ -10,17 +10,27 @@ body {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-/* 安全评分颜色 */
-.safety-5 { color: #059669; }
-.safety-4 { color: #10B981; }
-.safety-3 { color: #F59E0B; }
-.safety-2 { color: #F97316; }
-.safety-1 { color: #EF4444; }
-.bg-safety-5 { background: #059669; }
-.bg-safety-4 { background: #10B981; }
-.bg-safety-3 { background: #F59E0B; }
-.bg-safety-2 { background: #F97316; }
-.bg-safety-1 { background: #EF4444; }
+/* 安全评分颜色 - EWG 1-10 (低分=安全) */
+.safety-1 { color: #059669; }
+.safety-2 { color: #10B981; }
+.safety-3 { color: #34D399; }
+.safety-4 { color: #F59E0B; }
+.safety-5 { color: #D97706; }
+.safety-6 { color: #F97316; }
+.safety-7 { color: #EA580C; }
+.safety-8 { color: #EF4444; }
+.safety-9 { color: #DC2626; }
+.safety-10 { color: #B91C1C; }
+.bg-safety-1 { background: #059669; }
+.bg-safety-2 { background: #10B981; }
+.bg-safety-3 { background: #34D399; }
+.bg-safety-4 { background: #F59E0B; }
+.bg-safety-5 { background: #D97706; }
+.bg-safety-6 { background: #F97316; }
+.bg-safety-7 { background: #EA580C; }
+.bg-safety-8 { background: #EF4444; }
+.bg-safety-9 { background: #DC2626; }
+.bg-safety-10 { background: #B91C1C; }
 
 /* 底部导航安全区 */
 .safe-bottom {
@@ -29,8 +39,8 @@ body {
 
 /* 触摸优化 */
 .touch-target {
-  min-height: 44px;
-  min-width: 44px;
+  min-height: 48px;
+  min-width: 48px;
 }
 
 /* 滚动隐藏 */
@@ -43,3 +53,29 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+
+/* 弹窗滚动穿透防护 */
+.modal-overlay {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 仅桌面端触发 hover 效果，移动端用 :active */
+@media (hover: hover) {
+  .hover-scale:hover { transform: scale(1.05); }
+}
+.hover-scale:active { transform: scale(0.98); }
+
+/* 图片防 CLS 占位 */
+.img-placeholder {
+  aspect-ratio: 1 / 1;
+  background-color: #f3f4f6;
+}
+
+/* 虚拟键盘适配 */
+@supports (height: 100dvh) {
+  .h-screen-safe { height: 100dvh; }
+}
+.keyboard-aware {
+  padding-bottom: env(keyboard-inset-bottom, 0px);
+}

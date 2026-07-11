@@ -85,7 +85,7 @@ export default function IngredientDetail() {
           {ing.description && (
             <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm">
               <h3 className="font-semibold text-sm md:text-base text-gray-900 mb-2">📝 详细说明</h3>
-              <p className="text-sm md:text-base text-gray-700 leading-relaxed">{ing.description}</p>
+              <p className="text-sm md:text-base text-gray-700 leading-relaxed line-clamp-6">{ing.description}</p>
             </div>
           )}
 

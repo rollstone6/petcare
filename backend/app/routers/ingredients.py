@@ -13,11 +13,11 @@ def get_dangerous_ingredients(
     limit: int = Query(8, ge=1, le=50, description="返回数量"),
     db: Session = Depends(get_db),
 ):
-    """获取高危成分（安全评分 <= 2 的成分）"""
+    """获取高危成分（EWG评分 >= 7 的成分）"""
     ingredients = db.query(models.Ingredient).filter(
-        models.Ingredient.safety_level <= 2
+        models.Ingredient.ewg_score >= 7
     ).order_by(
-        models.Ingredient.safety_level.asc()
+        models.Ingredient.ewg_score.desc()
     ).limit(limit).all()
     
     return schemas.ApiResponse(data={

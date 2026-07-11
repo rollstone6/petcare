@@ -1,6 +1,6 @@
 """宠物宝 (PetCare) — 数据模型"""
 from sqlalchemy import (
-    Column, Integer, String, Text, Float, ForeignKey, Enum, Table, DateTime, Date, UniqueConstraint, func
+    Column, Integer, String, Text, Float, Boolean, ForeignKey, Enum, Table, DateTime, Date, UniqueConstraint, func
 )
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -78,6 +78,9 @@ class Ingredient(Base):
     description = Column(Text, default="")
     function = Column(String(500), default="", comment="功效说明")
     risk_tags = Column(Text, default="[]", comment="风险标签 JSON: [\"肠胃敏感\", \"糖尿病\"]")
+    ewg_score = Column(Integer, default=5, comment="EWG安全评分 1-10")
+    ewg_name = Column(String(200), default="", comment="EWG标准名称")
+    is_natural = Column(Boolean, default=False, comment="是否为天然成分")
 
     products = relationship("Product", secondary=product_ingredient, back_populates="ingredients")
 
