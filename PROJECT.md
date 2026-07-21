@@ -67,7 +67,7 @@ Phase 1 数据层 ✅ → Phase 2 后端 API ✅ → Phase 3 前端 ✅ → Phas
 
 ### ⏳ 待办
 
-- [ ] 阿里云 OSS + CDN 迁移（待创建 Bucket）
+- [x] 阿里云 OSS 静态资源迁移（assets/avatars/PWA → website-petcare-oss-bj）
 
 ---
 
