@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
   PYTHON_VERSION: '3.11'
 
 jobs:
@@ -72,6 +72,9 @@ jobs:
             
             # 构建前端
             cd frontend && npm ci && npm run build && cd ..
+            
+            # 部署前端到 /var/www/petcare/
+            cp -r frontend/dist/* /var/www/petcare/
             
             # 重启后端
             sudo systemctl restart petcare.service

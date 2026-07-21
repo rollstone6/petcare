@@ -6,8 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "postbuild": "cp -r /root/workspace/petcare/frontend/dist/* /var/www/petcare/",
-    "deploy": "npm run build && systemctl reload nginx",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -1364,24 +1364,30 @@ function DiaryForm({ feedingLog, day, onClose, onSaved }) {
 
 // ===== 主页面 =====
 
-export default function HealthTracker() {
+export default function HealthTracker({ pets: externalPets, petsLoading: externalPetsLoading, embed = false }) {
   const { state } = useApp()
   const [tab, setTab] = useState('health') // health | schedule
   const [pets, setPets] = useState([])
   const [petsLoading, setPetsLoading] = useState(true)
   const loggedIn = !!state.user
 
-  // 加载宠物档案
+  // 如果是嵌入模式，使用外部传入的数据
   useEffect(() => {
-    if (state.user) {
-      api.getPets()
-        .then(data => setPets(data.items || []))
-        .catch(() => {})
-        .finally(() => setPetsLoading(false))
+    if (embed) {
+      setPets(externalPets || [])
+      setPetsLoading(externalPetsLoading || false)
     } else {
-      setPetsLoading(false)
+      // 独立页面模式，自己加载
+      if (state.user) {
+        api.getPets()
+          .then(data => setPets(data.items || []))
+          .catch(() => {})
+          .finally(() => setPetsLoading(false))
+      } else {
+        setPetsLoading(false)
+      }
     }
-  }, [state.user])
+  }, [state.user, embed, externalPets, externalPetsLoading])
 
   if (!loggedIn) {
     return (
@@ -1405,6 +1411,52 @@ export default function HealthTracker() {
     )
   }
 
+  // 嵌入模式：不显示顶部标题和重复的 tab
+  if (embed) {
+    return (
+      <div className="animate-fadeIn pb-20">
+        <div className="bg-white px-4 md:px-8 pt-4 pb-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+              <button
+                onClick={() => setTab('health')}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  tab === 'health' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'
+                }`}
+              >
+                📋 健康日记
+              </button>
+              <button
+                onClick={() => setTab('schedule')}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  tab === 'schedule' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'
+                }`}
+              >
+                📅 日程提醒
+              </button>
+              <button
+                onClick={() => setTab('feeding')}
+                className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  tab === 'feeding' ? 'bg-white text-primary shadow-sm' : 'text-gray-500'
+                }`}
+              >
+                🍽 喂养日记
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="px-4 md:px-8 mt-4">
+          <div className="max-w-2xl mx-auto">
+            {tab === 'health' && <HealthTab state={state} pets={pets} />}
+            {tab === 'schedule' && <ScheduleTab state={state} pets={pets} />}
+            {tab === 'feeding' && <FeedingTab state={state} pets={pets} />}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 独立页面模式
   return (
     <div className="animate-fadeIn pb-20">
       {/* 顶部 */}
