@@ -79,6 +79,7 @@ jobs:
             
             # 同步静态资源到 OSS
             ossutil cp -r /var/www/petcare/assets/ oss://website-petcare-oss-bj/assets/ --update --force
+            ossutil cp -r /var/www/petcare/avatars/ oss://website-petcare-oss-bj/avatars/ --update --force
             
             # 重启后端
             sudo systemctl restart petcare.service
