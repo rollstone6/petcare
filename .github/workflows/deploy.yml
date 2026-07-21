@@ -55,9 +55,11 @@ jobs:
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H 101.200.146.234 >> ~/.ssh/known_hosts
+          echo "Key length: $(wc -c < ~/.ssh/deploy_key) bytes"
+          ssh-keygen -y -f ~/.ssh/deploy_key || echo "KEY VALIDATION FAILED"
       
       - name: Deploy to server
         run: |
