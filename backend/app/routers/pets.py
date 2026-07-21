@@ -19,7 +19,9 @@ class PetCreate(BaseModel):
     weight: Optional[float] = None
     avatar_url: Optional[str] = ""
     birthday: Optional[date] = None
+    body_condition: Optional[str] = ""
     auto_reminders: Optional[bool] = True  # 是否自动生成默认提醒
+    health_tags: Optional[list] = None  # 健康标签列表
 
 
 class PetUpdate(BaseModel):
@@ -30,6 +32,8 @@ class PetUpdate(BaseModel):
     weight: Optional[float] = None
     avatar_url: Optional[str] = None
     birthday: Optional[date] = None
+    body_condition: Optional[str] = None
+    health_tags: Optional[list] = None
 
 
 @router.get("")
@@ -44,6 +48,15 @@ def list_pets(
 
     items = []
     for p in pets:
+        # 解析 health_tags JSON
+        import json
+        health_tags_list = []
+        try:
+            if p.health_tags:
+                health_tags_list = json.loads(p.health_tags)
+        except:
+            health_tags_list = []
+        
         item = {
             "id": p.id,
             "pet_name": p.pet_name,
@@ -52,6 +65,8 @@ def list_pets(
             "weight": p.weight,
             "avatar_url": p.avatar_url,
             "birthday": str(p.birthday) if p.birthday else None,
+            "body_condition": p.body_condition or "",
+            "health_tags": health_tags_list,
             "age_category": get_age_category_display(p.birthday, p.breed.species if p.breed else "狗"),
             "created_at": str(p.created_at),
             "breed": None,
@@ -75,6 +90,7 @@ def create_pet(
     db: Session = Depends(get_db),
 ):
     """添加宠物"""
+    import json
     # 创建宠物档案
     pet = models.PetProfile(
         user_id=user.id,
@@ -85,6 +101,8 @@ def create_pet(
         weight=req.weight,
         avatar_url=req.avatar_url or "",
         birthday=req.birthday,
+        body_condition=req.body_condition or "",
+        health_tags=json.dumps(req.health_tags or []),
     )
     db.add(pet)
     db.commit()
@@ -140,6 +158,7 @@ def update_pet(
     db: Session = Depends(get_db),
 ):
     """更新宠物信息"""
+    import json
     pet = db.query(models.PetProfile).filter(
         models.PetProfile.id == pet_id,
         models.PetProfile.user_id == user.id,
@@ -161,6 +180,10 @@ def update_pet(
         pet.avatar_url = req.avatar_url
     if req.birthday is not None:
         pet.birthday = req.birthday
+    if req.body_condition is not None:
+        pet.body_condition = req.body_condition
+    if req.health_tags is not None:
+        pet.health_tags = json.dumps(req.health_tags)
 
     db.commit()
     return {"code": 0, "message": "更新成功"}

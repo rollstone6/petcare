@@ -10,6 +10,11 @@ export default function PetProfiles() {
   const [showForm, setShowForm] = useState(false)
   const [editingPet, setEditingPet] = useState(null)
   const [selectedSpecies, setSelectedSpecies] = useState('')
+  const [healthTagsData, setHealthTagsData] = useState({ tags: [], categories: {} })
+  const [showTagsModal, setShowTagsModal] = useState(null) // pet object or null
+  const [tagsDraft, setTagsDraft] = useState([])
+  const [tagsSaving, setTagsSaving] = useState(false)
+  const [tagsToast, setTagsToast] = useState(null)
   const [formData, setFormData] = useState({
     pet_name: '',
     breed_id: '',
@@ -17,6 +22,7 @@ export default function PetProfiles() {
     gender: '',
     weight: '',
     birthday: '',
+    body_condition: '',
   })
 
   // 按物种分组的品种列表
@@ -34,16 +40,39 @@ export default function PetProfiles() {
 
   const loadData = async () => {
     try {
-      const [petsData, breedsData] = await Promise.all([
+      const [petsData, breedsData, tagsData] = await Promise.all([
         api.getPets(),
         api.getBreeds(),
+        api.getHealthTags(),
       ])
       setPets(petsData.items || [])
       setBreeds(breedsData.items || [])
+      setHealthTagsData(tagsData)
     } catch (err) {
       console.error('加载数据失败:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const openTagsModal = (pet) => {
+    setShowTagsModal(pet)
+    setTagsDraft(pet.health_tags || [])
+  }
+
+  const handleSaveTags = async () => {
+    if (!showTagsModal) return
+    setTagsSaving(true)
+    try {
+      await api.updatePetHealthTags(showTagsModal.id, tagsDraft)
+      setTagsToast(`✅ ${showTagsModal.pet_name} 的健康标签已更新`)
+      setTimeout(() => setTagsToast(null), 3000)
+      setShowTagsModal(null)
+      loadData()
+    } catch (err) {
+      alert(err.message)
+    } finally {
+      setTagsSaving(false)
     }
   }
 
@@ -54,6 +83,7 @@ export default function PetProfiles() {
         ...formData,
         breed_id: formData.breed_id ? parseInt(formData.breed_id) : null,
         weight: formData.weight ? parseFloat(formData.weight) : null,
+        body_condition: formData.body_condition || '',
       }
 
       if (editingPet) {
@@ -64,7 +94,7 @@ export default function PetProfiles() {
       
       setShowForm(false)
       setEditingPet(null)
-      setFormData({ pet_name: '', breed_id: '', age: '', gender: '', weight: '' })
+      setFormData({ pet_name: '', breed_id: '', age: '', gender: '', weight: '', birthday: '', body_condition: '' })
       loadData()
     } catch (err) {
       alert(err.message)
@@ -80,6 +110,7 @@ export default function PetProfiles() {
       gender: pet.gender || '',
       weight: pet.weight?.toString() || '',
       birthday: pet.birthday || '',
+      body_condition: pet.body_condition || '',
     })
     setShowForm(true)
   }
@@ -128,7 +159,7 @@ export default function PetProfiles() {
           <button
             onClick={() => {
               setEditingPet(null)
-              setFormData({ pet_name: '', breed_id: '', age: '', gender: '', weight: '', birthday: '' })
+              setFormData({ pet_name: '', breed_id: '', age: '', gender: '', weight: '', birthday: '', body_condition: '' })
               setShowForm(true)
             }}
             className="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
@@ -182,9 +213,47 @@ export default function PetProfiles() {
                         </span>
                       )}
                       {pet.weight && <span>{pet.weight}kg</span>}
+                      {pet.body_condition && (
+                        <span className={`px-2 py-0.5 rounded-full ${
+                          pet.body_condition === 'thin' ? 'bg-cyan-100 text-cyan-700' :
+                          pet.body_condition === 'standard' ? 'bg-emerald-100 text-emerald-700' :
+                          pet.body_condition === 'chubby' ? 'bg-amber-100 text-amber-700' :
+                          'bg-rose-100 text-rose-700'
+                        }`}>
+                          {pet.body_condition === 'thin' ? '🦴 骨感型' :
+                           pet.body_condition === 'standard' ? '🐕 标准体型' :
+                           pet.body_condition === 'chubby' ? '🍞 略微发福' :
+                           '🎈 圆滚滚'}
+                        </span>
+                      )}
                     </div>
+                    {/* 健康标签展示 */}
+                    {pet.health_tags && pet.health_tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {pet.health_tags.slice(0, 4).map(tagId => {
+                          const tag = healthTagsData.tags.find(t => t.id === tagId)
+                          return tag ? (
+                            <span key={tagId} className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                              {tag.icon} {tag.label}
+                            </span>
+                          ) : null
+                        })}
+                        {pet.health_tags.length > 4 && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                            +{pet.health_tags.length - 4}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-1">
+                    <button
+                      onClick={() => openTagsModal(pet)}
+                      className="text-gray-400 hover:text-orange-500 p-3 text-sm touch-target"
+                      title="健康标签"
+                    >
+                      🏷️
+                    </button>
                     <button
                       onClick={() => handleEdit(pet)}
                       className="text-gray-400 hover:text-primary p-3 text-sm touch-target"
@@ -301,15 +370,55 @@ export default function PetProfiles() {
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-1">性别</label>
-                <select
-                  value={formData.gender}
-                  onChange={e => setFormData({ ...formData, gender: e.target.value })}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-primary bg-white"
-                >
-                  <option value="">未知</option>
-                  <option value="公">公</option>
-                  <option value="母">母</option>
-                </select>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: '公', icon: '♂️', label: '帅小伙' },
+                    { value: '母', icon: '♀️', label: '小公主' },
+                    { value: '保密', icon: '🐾', label: '保密' },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, gender: formData.gender === opt.value ? '' : opt.value })}
+                      className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all ${
+                        formData.gender === opt.value
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-xl mb-1">{opt.icon}</span>
+                      <span className="text-xs text-gray-700">{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">体型 🎨</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'thin', icon: '🦴', label: '骨感型', desc: '苗条轻盈' },
+                    { value: 'standard', icon: '🐕', label: '标准体型', desc: '健康匀称' },
+                    { value: 'chubby', icon: '🍞', label: '略微发福', desc: '软萌圆润' },
+                    { value: 'round', icon: '🎈', label: '圆滚滚', desc: '煤气罐罐' },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, body_condition: formData.body_condition === opt.value ? '' : opt.value })}
+                      className={`flex items-center gap-2 p-3 rounded-xl border-2 transition-all text-left ${
+                        formData.body_condition === opt.value
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-xl flex-shrink-0">{opt.icon}</span>
+                      <div>
+                        <div className="text-xs font-medium text-gray-800">{opt.label}</div>
+                        <div className="text-[10px] text-gray-500">{opt.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="block text-sm text-gray-700 mb-1">体重 (kg)</label>
@@ -332,6 +441,98 @@ export default function PetProfiles() {
             <button onClick={() => setShowForm(false)} className="w-full text-center text-sm text-gray-400 mt-3">
               取消
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 健康标签管理弹窗 */}
+      {showTagsModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 modal-overlay" onClick={() => setShowTagsModal(null)}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">🏷️ 健康标签</h2>
+            <p className="text-xs text-gray-500 mb-4">
+              {showTagsModal.pet_name} · 勾选当前健康状况，浏览食品时会自动提醒
+            </p>
+
+            {/* 已选标签 */}
+            {tagsDraft.length > 0 && (
+              <div className="mb-4 p-3 bg-primary/5 rounded-xl">
+                <p className="text-xs text-gray-600 mb-2">已选 {tagsDraft.length} 个标签</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {tagsDraft.map(tagId => {
+                    const tag = healthTagsData.tags.find(t => t.id === tagId)
+                    return tag ? (
+                      <span key={tagId}
+                        onClick={() => setTagsDraft(prev => prev.filter(t => t !== tagId))}
+                        className="inline-flex items-center gap-1 px-2 py-1 bg-primary text-white rounded-full text-xs cursor-pointer hover:bg-primary/90 transition-colors"
+                      >
+                        <span>{tag.icon}</span>
+                        <span>{tag.label}</span>
+                        <span className="ml-0.5 opacity-70">✕</span>
+                      </span>
+                    ) : null
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 标签分类列表 */}
+            <div className="space-y-3">
+              {Object.entries(healthTagsData.categories).map(([category, tags]) => (
+                <div key={category} className="border border-gray-100 rounded-xl p-3">
+                  <h4 className="font-semibold text-xs text-gray-700 mb-2">{category}</h4>
+                  <div className="space-y-1.5">
+                    {tags.map(tag => {
+                      const isSelected = tagsDraft.includes(tag.id)
+                      return (
+                        <button key={tag.id}
+                          onClick={() => setTagsDraft(prev => 
+                            prev.includes(tag.id) ? prev.filter(t => t !== tag.id) : [...prev, tag.id]
+                          )}
+                          className={`w-full flex items-center gap-2 p-2 rounded-lg transition-all text-left ${
+                            isSelected
+                              ? 'bg-primary/10 border-2 border-primary'
+                              : 'bg-gray-50 border-2 border-transparent hover:bg-gray-100'
+                          }`}
+                        >
+                          <span className="text-base flex-shrink-0">{tag.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-xs font-medium ${isSelected ? 'text-primary' : 'text-gray-800'}`}>
+                                {tag.label}
+                              </span>
+                              {isSelected && (
+                                <span className="text-[10px] bg-primary text-white px-1 py-0.5 rounded">✓</span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{tag.description}</p>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* 保存按钮 */}
+            <button onClick={handleSaveTags} disabled={tagsSaving}
+              className="w-full bg-primary text-white py-2.5 rounded-xl font-medium text-sm mt-4 disabled:opacity-50 hover:bg-primary/90 transition-colors"
+            >
+              {tagsSaving ? '保存中...' : '💾 保存标签'}
+            </button>
+            <button onClick={() => setShowTagsModal(null)} className="w-full text-center text-sm text-gray-400 mt-2">
+              取消
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {tagsToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[70] animate-slideDown">
+          <div className="bg-gray-800 text-white px-6 py-3 rounded-xl shadow-lg text-sm">
+            {tagsToast}
           </div>
         </div>
       )}

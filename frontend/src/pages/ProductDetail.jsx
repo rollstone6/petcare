@@ -6,6 +6,7 @@ import { getToken } from '../api/client'
 import AIChat from '../components/AIChat'
 import ReviewSection from '../components/ReviewSection'
 import BreedCompatibility from '../components/BreedCompatibility'
+import HealthWarningBanner from '../components/HealthWarningBanner'
 
 const LEVEL_COLORS = {
   1: 'bg-green-500', 2: 'bg-green-400', 3: 'bg-green-400',
@@ -95,6 +96,13 @@ export default function ProductDetail() {
           <div className="mt-5 md:mt-6">
             <BreedCompatibility productId={parseInt(id)} />
           </div>
+
+          {/* 🚨 健康警告横幅（仅食品） */}
+          {product.type === '食品' && getToken() && (
+            <div className="mt-4">
+              <HealthWarningBanner productId={parseInt(id)} />
+            </div>
+          )}
 
           {/* 安全评分（折叠为次要信息） */}
           <div className="mt-3 flex items-center gap-2 p-3 bg-gray-50 rounded-xl">

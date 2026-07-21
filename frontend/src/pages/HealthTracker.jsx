@@ -7,6 +7,7 @@ import 'swiper/css/free-mode'
 import { useApp } from '../context/AppContext'
 import { api } from '../api/client'
 import { getToken } from '../api/client'
+import HealthTagsTab from '../components/HealthTagsTab'
 
 // ===== 常量 =====
 const TYPE_ICONS = { '便便': '💩', '饮水': '💧', '呕吐': '🤮', '体重': '⚖️', '食欲': '🍖', '精神': '😊', '用药': '💊', '其他': '📝' }

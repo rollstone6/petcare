@@ -247,6 +247,8 @@ class PetProfile(Base):
     weight = Column(Float, nullable=True)
     avatar_url = Column(String(500), default="")
     birthday = Column(Date, nullable=True)  # 生日，用于智能提醒计算
+    body_condition = Column(String(20), default="", comment="体型: thin/standard/chubby/round")
+    health_tags = Column(Text, default="[]", comment="健康标签 JSON: [\"obesity_mild\", \"stomach_sensitive\"]")
     created_at = Column(DateTime, default=func.now())
 
     user = relationship("User")

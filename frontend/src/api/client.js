@@ -151,6 +151,12 @@ export const api = {
   // AI 配料分析
   analyzeIngredients: (data) => request('/ai/analyze-ingredients', { method: 'POST', body: JSON.stringify(data) }),
 
+  // 健康标签
+  getHealthTags: () => request('/health-tags'),
+  updatePetHealthTags: (petId, tags) => 
+    request(`/health-tags/pets/${petId}`, { method: 'PUT', body: JSON.stringify({ tags }) }),
+  checkProductWarnings: (productId) => request(`/health-tags/check/${productId}`, { method: 'POST' }),
+
   // 产品建议（UGC）
   createSuggestion: async (formData) => {
     const token = getToken()

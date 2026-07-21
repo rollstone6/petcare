@@ -61,7 +61,7 @@ export default function Profile() {
   // 快捷功能入口
   const quickActions = [
     { icon: '🏥', label: '宠物管家', path: '/health', desc: '健康记录 + 日程提醒' },
-    { icon: '🐱', label: '宠物档案', path: '/pets', desc: '管理宠物信息' },
+    { icon: '🐱', label: '宠物档案', path: '/pets', desc: '管理宠物信息 + 健康标签' },
     { icon: '💬', label: '我的评论', action: () => setShowReviews(true), desc: '查看我的评价' },
     { icon: '🔖', label: '我的收藏', count: state.favorites.length, action: null, disabled: true, desc: '已收藏产品' },
   ]

@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144" width="144" height="144">
+  <defs>
+    <linearGradient id="bg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF9A56"/>
+      <stop offset="100%" style="stop-color:#FF6B6B"/>
+    </linearGradient>
+    <linearGradient id="ear" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB88C"/>
+      <stop offset="100%" style="stop-color:#FF8E8E"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background rounded square -->
+  <rect width="144" height="144" rx="32" fill="url(#bg2)"/>
+  
+  <!-- Left ear -->
+  <polygon points="38,48 28,18 56,38" fill="#FFE4C4"/>
+  <polygon points="40,44 32,24 52,40" fill="#FFB5B5"/>
+  
+  <!-- Right ear -->
+  <polygon points="106,48 116,18 88,38" fill="#FFE4C4"/>
+  <polygon points="104,44 112,24 92,40" fill="#FFB5B5"/>
+  
+  <!-- Face (big circle) -->
+  <circle cx="72" cy="78" r="42" fill="#FFE4C4"/>
+  
+  <!-- Left eye (big cute eye) -->
+  <ellipse cx="56" cy="74" rx="10" ry="11" fill="#3D3D3D"/>
+  <ellipse cx="56" cy="74" rx="8" ry="9" fill="#2D2D2D"/>
+  <circle cx="53" cy="71" r="3.5" fill="#ffffff"/>
+  <circle cx="59" cy="76" r="1.5" fill="#ffffff" opacity="0.6"/>
+  
+  <!-- Right eye -->
+  <ellipse cx="88" cy="74" rx="10" ry="11" fill="#3D3D3D"/>
+  <ellipse cx="88" cy="74" rx="8" ry="9" fill="#2D2D2D"/>
+  <circle cx="85" cy="71" r="3.5" fill="#ffffff"/>
+  <circle cx="91" cy="76" r="1.5" fill="#ffffff" opacity="0.6"/>
+  
+  <!-- Nose -->
+  <ellipse cx="72" cy="87" rx="4" ry="3" fill="#FF8E8E"/>
+  
+  <!-- Mouth (cute W shape) -->
+  <path d="M66 91 Q69 95 72 91 Q75 95 78 91" fill="none" stroke="#D4856B" stroke-width="1.8" stroke-linecap="round"/>
+  
+  <!-- Left whiskers -->
+  <line x1="28" y1="82" x2="48" y2="85" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="28" y1="88" x2="48" y2="88" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="28" y1="94" x2="48" y2="91" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  
+  <!-- Right whiskers -->
+  <line x1="96" y1="85" x2="116" y2="82" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="96" y1="88" x2="116" y2="88" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="96" y1="91" x2="116" y2="94" stroke="#D4A574" stroke-width="1.2" stroke-linecap="round"/>
+  
+  <!-- Blush -->
+  <circle cx="46" cy="88" r="6" fill="#FFB5B5" opacity="0.5"/>
+  <circle cx="98" cy="88" r="6" fill="#FFB5B5" opacity="0.5"/>
+</svg>

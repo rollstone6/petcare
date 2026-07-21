@@ -6,7 +6,7 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.inmemory import InMemoryBackend
 from app.config import settings
 from app.database import engine, Base
-from app.routers import products, ingredients, brands, categories, breeds, users, favorites, ai, records, schedules, reviews, health, pets, feeding, suggestions
+from app.routers import products, ingredients, brands, categories, breeds, users, favorites, ai, records, schedules, reviews, health, pets, feeding, suggestions, health_tags
 
 Base.metadata.create_all(bind=engine)
 
@@ -58,6 +58,7 @@ app.include_router(health.router, prefix="/api")
 app.include_router(pets.router, prefix="/api")
 app.include_router(feeding.router, prefix="/api")
 app.include_router(suggestions.router, prefix="/api")
+app.include_router(health_tags.router, prefix="/api")
 
 
 @app.get("/")
