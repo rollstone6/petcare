@@ -1,0 +1,90 @@
+name: Deploy PetCare to Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+      
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+      
+      - name: Build frontend
+        run: cd frontend && npm run build
+      
+      - name: Install backend dependencies
+        run: cd backend && pip install -r requirements.txt
+      
+      - name: Test backend (syntax check)
+        run: cd backend && python -m py_compile app/main.py
+  
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+      
+      - name: Deploy to server
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} << 'EOF'
+            cd /root/workspace/petcare
+            
+            # 创建备份
+            ./scripts/backup.sh
+            
+            # 拉取最新代码
+            git pull origin main
+            
+            # 构建前端
+            cd frontend && npm ci && npm run build && cd ..
+            
+            # 重启后端
+            sudo systemctl restart petcare.service
+            
+            # 等待服务启动
+            sleep 5
+            
+            # 健康检查
+            curl -f http://127.0.0.1:8000/ || exit 1
+            
+            echo "✅ 部署成功"
+          EOF
+      
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
