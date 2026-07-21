@@ -77,6 +77,9 @@ jobs:
             # 部署前端到 /var/www/petcare/
             cp -r frontend/dist/* /var/www/petcare/
             
+            # 同步静态资源到 OSS
+            ossutil cp -r /var/www/petcare/assets/ oss://website-petcare-oss-bj/assets/ --update --force
+            
             # 重启后端
             sudo systemctl restart petcare.service
             
