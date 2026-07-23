@@ -80,7 +80,7 @@
         data-id="{{item.id}}"
       >
         <view class="image">
-          <image src="{{item.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+          <image src="{{item.image_url || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
         </view>
         <view class="info">
           <view class="name">{{item.name}}</view>

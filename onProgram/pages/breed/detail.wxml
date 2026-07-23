@@ -7,7 +7,7 @@
   <block wx:elif="{{breed}}">
     <!-- 头部图片 -->
     <view class="breed-banner">
-      <image src="{{breed.image || '/images/placeholder.png'}}" mode="aspectFill" />
+      <image src="{{breed.image || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
     </view>
 
     <!-- 基本信息 -->

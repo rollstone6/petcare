@@ -1,6 +1,10 @@
 // API 请求封装
 const BASE_URL = 'https://petcare.yjyblog.xyz/api'
 
+// OSS 静态资源地址
+const OSS_BASE_URL = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com'
+const PLACEHOLDER_IMAGE = `${OSS_BASE_URL}/images/placeholder.png`
+
 // 获取存储的 token
 const getToken = () => {
   return wx.getStorageSync('token') || ''
@@ -185,6 +189,8 @@ const compareProducts = (ids) => {
 
 module.exports = {
   BASE_URL,
+  OSS_BASE_URL,
+  PLACEHOLDER_IMAGE,
   getToken,
   setToken,
   clearToken,

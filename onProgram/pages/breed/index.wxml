@@ -6,7 +6,7 @@
 
   <view class="breed-list" wx:else>
     <view class="breed-card card" wx:for="{{breeds}}" wx:key="id" bindtap="onBreedTap" data-id="{{item.id}}">
-      <image class="breed-image" src="{{item.image || '/images/placeholder.png'}}" mode="aspectFill" />
+      <image class="breed-image" src="{{item.image || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
       <view class="breed-info">
         <view class="breed-name">{{item.name}}</view>
         <view class="breed-desc">{{item.description}}</view>

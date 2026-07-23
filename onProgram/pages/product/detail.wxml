@@ -8,7 +8,7 @@
   <block wx:elif="{{product}}">
     <!-- 产品图片 -->
     <view class="product-image">
-      <image src="{{product.image || '/images/placeholder.png'}}" mode="aspectFill" />
+      <image src="{{product.image || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
     </view>
 
     <!-- 基本信息 -->

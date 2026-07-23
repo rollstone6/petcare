@@ -39,7 +39,7 @@ function createProductDetail() {
   <block wx:elif="{{product}}">
     <!-- 产品图片 -->
     <view class="product-image">
-      <image src="{{product.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+      <image src="{{product.image_url || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
     </view>
 
     <!-- 基本信息 -->
@@ -1078,7 +1078,7 @@ Page({
         data-id="{{item.id}}"
       >
         <view class="breed-image">
-          <image src="{{item.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+          <image src="{{item.image_url || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
         </view>
         <view class="breed-info">
           <view class="breed-name">{{item.name}}</view>
@@ -1269,7 +1269,7 @@ Page({
   <block wx:elif="{{breed}}">
     <!-- 品种图片 -->
     <view class="breed-image">
-      <image src="{{breed.image_url || '/images/placeholder.png'}}" mode="aspectFill" />
+      <image src="{{breed.image_url || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
     </view>
 
     <!-- 基本信息 -->
