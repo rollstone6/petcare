@@ -21,11 +21,11 @@ const sortOptions = [
 const PAGE_SIZE = 20
 
 function safetyLabel(score) {
-  // EWG 1-10分制：低分=安全
-  if (score <= 2) return { text: '优秀', cls: 'bg-emerald-100 text-emerald-700' }
-  if (score <= 3) return { text: '良好', cls: 'bg-green-100 text-green-700' }
-  if (score <= 5) return { text: '一般', cls: 'bg-yellow-100 text-yellow-700' }
-  if (score <= 7) return { text: '慎用', cls: 'bg-orange-100 text-orange-700' }
+  // 0-100分制：高分=安全
+  if (score >= 90) return { text: '优秀', cls: 'bg-emerald-100 text-emerald-700' }
+  if (score >= 70) return { text: '良好', cls: 'bg-green-100 text-green-700' }
+  if (score >= 50) return { text: '一般', cls: 'bg-yellow-100 text-yellow-700' }
+  if (score >= 30) return { text: '慎用', cls: 'bg-orange-100 text-orange-700' }
   return { text: '高危', cls: 'bg-red-100 text-red-700' }
 }
 
@@ -646,7 +646,7 @@ export default function Search() {
                         <div className="text-sm font-medium text-gray-900 truncate">{p.name}</div>
                         <div className="text-xs text-gray-400 truncate">{p.brand} · {p.category}</div>
                       </div>
-                      <span className={`text-sm font-bold ${p.safety_score <= 3 ? 'text-green-500' : p.safety_score <= 6 ? 'text-yellow-500' : 'text-red-500'}`}>
+                      <span className={`text-sm font-bold ${p.safety_score >= 70 ? 'text-green-500' : p.safety_score >= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
                         {p.safety_score.toFixed(1)}
                       </span>
                     </div>

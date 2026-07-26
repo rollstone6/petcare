@@ -62,9 +62,9 @@ export default function ProductDetail() {
     )
   }
 
-  const score = product.safety_score || 5
-  // EWG 1-10分制
-  const level = Math.min(10, Math.max(1, Math.round(score)))
+  const score = product.safety_score || 50
+  // 0-100分制：高分=安全
+  const level = Math.round(score / 10) // 转换为1-10级别显示
 
   return (
     <div className="animate-fadeIn pb-4">
@@ -112,7 +112,7 @@ export default function ProductDetail() {
             <div className="flex-1 min-w-0">
               <p className="text-xs font-medium text-gray-700">通用安全评分</p>
               <p className="text-[10px] text-gray-400">
-                {score <= 2 ? '安全可靠' : score <= 4 ? '基本安全' : score <= 6 ? '谨慎使用' : '风险较高'}
+                {score >= 90 ? '安全可靠' : score >= 70 ? '基本安全' : score >= 50 ? '谨慎使用' : '风险较高'}
               </p>
             </div>
             <div className="flex gap-0.5">

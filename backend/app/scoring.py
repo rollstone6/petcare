@@ -1,13 +1,18 @@
-"""宠物宝 (PetCare) — 安全评分算法 v3 (EWG标准)
+"""宠物宝 (PetCare) — 安全评分算法 v4 (0-100分制)
 
-评分体系（1-10分，基于EWG Skin Deep数据库）：
-- 1-2: 低危害（绿色）- 天然成分、已知安全
-- 3-6: 中等危害（黄色）- 有一定关注
-- 7-10: 高危害（红色）- 致癌、致畸、内分泌干扰
+评分体系（0-100分，高分=安全）：
+- 90-100: 优秀（绿色）- 天然纯净配方
+- 70-89: 良好（浅绿）- 基本安全
+- 50-69: 中等（黄色）- 有一定风险
+- 30-49: 较差（橙色）- 风险较高
+- 0-29: 危险（红色）- 高风险成分多
 
-规则：
-- 基础肉类原料（天然食材）: 1分
-- 化学添加剂: 按EWG数据库评分
+评分规则：
+- 基础分 100
+- 成分数量扣分：每个成分 -2（成分越多=加工越深）
+- 高风险成分（EWG 7-10）：每个 -20
+- 中风险成分（EWG 4-6）：每个 -8
+- 产品类型修正：食品 +5，保健品 +2，药品 -8
 """
 
 from sqlalchemy.orm import Session
@@ -16,65 +21,57 @@ from app import models
 
 def calculate_product_score(db: Session, product_id: int) -> float:
     """
-    计算产品的综合安全评分（1-10分制，基于EWG标准）
-    
-    算法：
-    1. 成分加权平均（考虑含量排序）
-    2. 高风险成分惩罚（含7-10分成分额外扣分）
-    3. 产品类型修正（食品/药品/保健品不同基准）
+    计算产品的综合安全评分（0-100分制，高分=安全）
     """
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
-        return 5.0
+        return 50.0
     
-    # 获取产品成分（按排序）
+    # 获取产品成分
     pi_rows = db.query(models.product_ingredient).filter(
         models.product_ingredient.c.product_id == product_id
     ).order_by(models.product_ingredient.c.sort_order).all()
     
     if not pi_rows:
-        return 5.0  # 无成分数据，默认中等
+        return 50.0  # 无成分数据，默认中等
     
-    # 1. 成分加权评分（前3个成分权重更高）
-    weights = [3.0, 2.5, 2.0, 1.5, 1.2, 1.0, 1.0, 1.0]  # 递减权重
-    total_weight = 0
-    weighted_score = 0
+    # 基础分
+    score = 100.0
     
-    for i, pi in enumerate(pi_rows):
+    # 统计各风险等级成分数量
+    high_risk = 0  # EWG 7-10
+    medium_risk = 0  # EWG 4-6
+    
+    for pi in pi_rows:
         ing = db.query(models.Ingredient).filter(models.Ingredient.id == pi.ingredient_id).first()
         if not ing:
             continue
         
         # 优先使用 ewg_score，否则用 safety_level 映射
-        ewg = ing.ewg_score if ing.ewg_score else ing.safety_level * 2  # 旧1-5分映射到1-10
+        ewg = ing.ewg_score if ing.ewg_score else (6 - ing.safety_level) * 2
         
-        weight = weights[min(i, len(weights)-1)]
-        weighted_score += ewg * weight
-        total_weight += weight
+        if ewg >= 7:
+            high_risk += 1
+        elif ewg >= 4:
+            medium_risk += 1
     
-    base_score = weighted_score / total_weight if total_weight > 0 else 5.0
+    # 成分数量扣分（核心区分度来源）
+    score -= len(pi_rows) * 2
     
-    # 2. 高风险成分惩罚
-    high_risk_count = 0
-    for pi in pi_rows:
-        ing = db.query(models.Ingredient).filter(models.Ingredient.id == pi.ingredient_id).first()
-        if ing and ing.ewg_score and ing.ewg_score >= 7:
-            high_risk_count += 1
+    # 高风险成分重罚
+    score -= high_risk * 20
+    score -= medium_risk * 8
     
-    penalty = high_risk_count * 0.8  # 每个高风险成分扣0.8分
-    
-    # 3. 产品类型修正
+    # 产品类型修正
     type_modifier = {
-        '食品': 0.5,    # 食品应该更安全
-        '保健品': 0,     # 保健品中性
-        '药品': -0.3     # 药品允许更高风险
+        '食品': 5,
+        '保健品': 2,
+        '药品': -8
     }.get(product.type, 0)
+    score += type_modifier
     
-    # 最终评分
-    final_score = base_score - penalty + type_modifier
-    
-    # 限制在1-10范围内
-    return round(max(1.0, min(10.0, final_score)), 1)
+    # 限制在0-100范围内
+    return round(max(0.0, min(100.0, score)), 1)
 
 
 def recalculate_all_scores(db: Session) -> int:

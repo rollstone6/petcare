@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getIngredients } from '../api';
-import { getSafetyColor, getSafetyEmoji } from '../utils';
+import { getIngredientSafetyColor, getSafetyEmoji } from '../utils';
 
 export default function IngredientList() {
   const [ingredients, setIngredients] = useState([]);
@@ -24,7 +24,7 @@ export default function IngredientList() {
       ) : (
         <div className="space-y-2">
           {ingredients.map(ing => {
-            const colorClass = getSafetyColor(ing.safety_level);
+            const colorClass = getIngredientSafetyColor(ing.safety_level);
             return (
               <Link
                 key={ing.id}
