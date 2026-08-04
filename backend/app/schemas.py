@@ -103,6 +103,12 @@ class PetBreedBase(BaseModel):
     common_issues: Optional[str] = ""
     description: Optional[str] = ""
     image_url: Optional[str] = ""
+    name_en: Optional[str] = ""
+    lifespan: Optional[str] = ""
+    weight_range: Optional[str] = ""
+    temperament: Optional[str] = ""
+    origin: Optional[str] = ""
+    hypoallergenic: Optional[int] = 0
 
 class PetBreed(PetBreedBase):
     id: int

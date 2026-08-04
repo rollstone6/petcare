@@ -43,6 +43,16 @@ export default function BreedDetail() {
     )
   }
 
+  // 基础信息卡片数据
+  const infoCards = [
+    breed.lifespan && { icon: '⏳', label: '寿命', value: breed.lifespan },
+    breed.weight_range && { icon: '⚖️', label: '体重', value: breed.weight_range },
+    breed.origin && { icon: '🌍', label: '产地', value: breed.origin },
+    { icon: breed.hypoallergenic ? '🌿' : '🤧', label: '低敏性', value: breed.hypoallergenic ? '低敏' : '普通' },
+  ].filter(Boolean)
+
+  const temperamentTags = (breed.temperament || '').split('、').filter(Boolean)
+
   return (
     <div className="animate-fadeIn pb-4">
       {/* 头部 */}
@@ -66,22 +76,57 @@ export default function BreedDetail() {
               )}
             </div>
             <div className="flex-1">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">{breed.name}</h1>
-              <div className="flex items-center gap-2 mt-2">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                {breed.name}
+                {breed.name_en && (
+                  <span className="ml-2 text-sm md:text-base font-normal text-gray-400">{breed.name_en}</span>
+                )}
+              </h1>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <span className="text-xs md:text-sm bg-primary/10 text-primary px-2 py-0.5 rounded-full">{breed.species}</span>
                 <span className="text-xs md:text-sm bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{breed.size || '中型'}</span>
+                {breed.hypoallergenic === 1 && (
+                  <span className="text-xs md:text-sm bg-green-100 text-green-700 px-2 py-0.5 rounded-full">🌿 低敏品种</span>
+                )}
               </div>
-              {breed.description && (
-                <p className="text-sm md:text-base text-gray-600 mt-4 leading-relaxed line-clamp-6">{breed.description}</p>
-              )}
-              {breed.common_issues && (
-                <div className="mt-4 p-3 md:p-4 bg-amber-50 rounded-xl">
-                  <p className="text-xs md:text-sm font-medium text-amber-800 mb-1">⚠️ 常见健康问题</p>
-                  <p className="text-xs md:text-sm text-amber-700">{breed.common_issues}</p>
+
+              {/* 性格标签 */}
+              {temperamentTags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {temperamentTags.map(tag => (
+                    <span key={tag} className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded-lg border border-amber-100">
+                      {tag}
+                    </span>
+                  ))}
                 </div>
+              )}
+
+              {breed.description && (
+                <p className="text-sm md:text-base text-gray-600 mt-4 leading-relaxed">{breed.description}</p>
               )}
             </div>
           </div>
+
+          {/* 基础信息卡片 */}
+          {infoCards.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mt-5">
+              {infoCards.map(card => (
+                <div key={card.label} className="bg-gray-50 rounded-xl p-3 text-center">
+                  <p className="text-lg">{card.icon}</p>
+                  <p className="text-[11px] text-gray-400 mt-0.5">{card.label}</p>
+                  <p className="text-sm font-semibold text-gray-800 mt-0.5">{card.value}</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 常见健康问题 */}
+          {breed.common_issues && (
+            <div className="mt-4 p-3 md:p-4 bg-amber-50 rounded-xl">
+              <p className="text-xs md:text-sm font-medium text-amber-800 mb-1">⚠️ 常见健康问题</p>
+              <p className="text-xs md:text-sm text-amber-700 leading-relaxed">{breed.common_issues}</p>
+            </div>
+          )}
         </div>
       </div>
 

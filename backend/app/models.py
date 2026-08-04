@@ -120,6 +120,12 @@ class PetBreed(Base):
     description = Column(Text, default="")
     image_url = Column(String(500), default="")
     health_tags = Column(Text, default="[]", comment="健康风险标签 JSON: [\"多囊肾\", \"肠胃敏感\"]")
+    name_en = Column(String(100), default="", comment="英文名")
+    lifespan = Column(String(30), default="", comment="寿命 如 12-14年")
+    weight_range = Column(String(50), default="", comment="体重范围 如 25-34kg")
+    temperament = Column(String(200), default="", comment="性格标签(中文顿号分隔)")
+    origin = Column(String(50), default="", comment="产地")
+    hypoallergenic = Column(Integer, default=0, comment="是否低敏")
 
     recommended_products = relationship("Product", secondary=breed_product, back_populates="suitable_breeds")
 
