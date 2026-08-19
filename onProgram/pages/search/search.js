@@ -1,5 +1,8 @@
 // pages/search/search.js
 const api = require('../../utils/api')
+const { formatImageUrl } = require('../../utils/util')
+
+const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
 
 Page({
   data: {
@@ -73,7 +76,10 @@ Page({
       }
 
       const result = await api.getProducts(params)
-      const items = result.items || result || []
+      const items = (result.items || result || []).map(item => ({
+        ...item,
+        image: formatImageUrl(item.image_url, PLACEHOLDER)
+      }))
 
       this.setData({
         products: this.data.page === 1 ? items : [...this.data.products, ...items],

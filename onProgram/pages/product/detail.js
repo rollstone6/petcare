@@ -1,6 +1,9 @@
 // pages/product/detail.js
 const api = require('../../utils/api')
+const { formatImageUrl } = require('../../utils/util')
 const app = getApp()
+
+const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
 
 Page({
   data: {
@@ -24,6 +27,9 @@ Page({
   async loadProduct() {
     try {
       const product = await api.getProductDetail(this.productId)
+      
+      // 处理图片URL
+      product.image = formatImageUrl(product.image_url, PLACEHOLDER)
       
       // 检查是否已收藏
       let isFavorite = false

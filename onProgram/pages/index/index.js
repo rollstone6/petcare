@@ -1,5 +1,8 @@
 // pages/index/index.js
 const api = require('../../utils/api')
+const { formatImageUrl } = require('../../utils/util')
+
+const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
 
 Page({
   data: {
@@ -28,9 +31,16 @@ Page({
         api.getProducts({ page: 1, page_size: 10 })
       ])
       
+      // 处理产品图片URL：后端返回 image_url 是相对路径，转为完整URL
+      const items = products.items || products || []
+      const formattedProducts = items.map(item => ({
+        ...item,
+        image: formatImageUrl(item.image_url, PLACEHOLDER)
+      }))
+      
       this.setData({
         categories: categories || [],
-        hotProducts: products.items || products || [],
+        hotProducts: formattedProducts,
         loading: false
       })
     } catch (err) {

@@ -1,5 +1,8 @@
 // pages/breed/detail.js
 const api = require('../../utils/api')
+const { formatImageUrl } = require('../../utils/util')
+
+const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
 
 Page({
   data: {
@@ -19,6 +22,8 @@ Page({
   async loadDetail() {
     try {
       const breed = await api.getBreedDetail(this.breedId)
+      // 处理图片URL
+      breed.image = formatImageUrl(breed.image_url, PLACEHOLDER)
       this.setData({ breed, loading: false })
     } catch (err) {
       console.error('加载品种详情失败:', err)
