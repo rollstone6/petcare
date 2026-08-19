@@ -135,6 +135,10 @@ const getBreeds = (params = {}) => {
   return get('/breeds', params)
 }
 
+const getSpecies = () => {
+  return get('/breeds/species')
+}
+
 const getBreedDetail = (id) => {
   return get(`/breeds/${id}`)
 }
@@ -211,6 +215,7 @@ module.exports = {
   getCategories,
   // 品种
   getBreeds,
+  getSpecies,
   getBreedDetail,
   getBreedProducts,
   // 用户

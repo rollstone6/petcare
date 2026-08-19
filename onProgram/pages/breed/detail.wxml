@@ -1,47 +1,98 @@
 <!--pages/breed/detail.wxml-->
 <view class="page-detail">
+  <!-- 加载中 -->
   <view class="loading" wx:if="{{loading}}">
     <view class="loading-text">加载中...</view>
   </view>
 
   <block wx:elif="{{breed}}">
-    <!-- 头部图片 -->
-    <view class="breed-banner">
-      <image src="{{breed.image || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
+    <!-- 头部信息区 -->
+    <view class="header-section">
+      <view class="header-content">
+        <!-- 品种图片 -->
+        <view class="breed-avatar-large">
+          <image 
+            src="{{breed.image || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}"
+            mode="aspectFill"
+          />
+        </view>
+        
+        <!-- 基本信息 -->
+        <view class="breed-info">
+          <view class="breed-name">
+            {{breed.name}}
+            <text class="breed-name-en" wx:if="{{breed.name_en}}">{{breed.name_en}}</text>
+          </view>
+          
+          <view class="breed-tags">
+            <view class="tag tag-species">{{breed.species}}</view>
+            <view class="tag tag-size" wx:if="{{breed.size}}">{{breed.size}}型</view>
+            <view class="tag tag-hypoallergenic" wx:if="{{breed.hypoallergenic}}">🌿 低敏品种</view>
+          </view>
+          
+          <!-- 性格标签 -->
+          <view class="temperament-tags" wx:if="{{breed.temperamentTags.length > 0}}">
+            <view class="temperament-tag" wx:for="{{breed.temperamentTags}}" wx:key="*this">
+              {{item}}
+            </view>
+          </view>
+          
+          <!-- 描述 -->
+          <view class="breed-desc" wx:if="{{breed.description}}">
+            {{breed.description}}
+          </view>
+        </view>
+      </view>
+      
+      <!-- 基础信息卡片网格 -->
+      <view class="info-cards" wx:if="{{breed.infoCards.length > 0}}">
+        <view class="info-card" wx:for="{{breed.infoCards}}" wx:key="label">
+          <view class="info-icon">{{item.icon}}</view>
+          <view class="info-label">{{item.label}}</view>
+          <view class="info-value">{{item.value}}</view>
+        </view>
+      </view>
+      
+      <!-- 常见健康问题 -->
+      <view class="health-issues" wx:if="{{breed.common_issues}}">
+        <view class="section-title">⚠️ 常见健康问题</view>
+        <view class="issues-content">{{breed.common_issues}}</view>
+      </view>
     </view>
-
-    <!-- 基本信息 -->
-    <view class="card">
-      <view class="breed-name">{{breed.name}}</view>
-      <view class="breed-desc">{{breed.description}}</view>
-    </view>
-
-    <!-- 特征信息 -->
-    <view class="card" wx:if="{{breed.characteristics}}">
-      <view class="card-title">品种特征</view>
-      <view class="desc-text">{{breed.characteristics}}</view>
-    </view>
-
-    <!-- 护理建议 -->
-    <view class="card" wx:if="{{breed.care_tips}}">
-      <view class="card-title">护理建议</view>
-      <view class="desc-text">{{breed.care_tips}}</view>
-    </view>
-
+    
     <!-- 推荐产品 -->
-    <view class="card" wx:if="{{products.length}}">
-      <view class="card-title">推荐产品</view>
-      <view class="product-list">
-        <view class="product-item" wx:for="{{products}}" wx:key="id" bindtap="onProductTap" data-id="{{item.id}}">
-          <view class="product-name">{{item.name}}</view>
-          <view class="product-brand">{{item.brand}}</view>
+    <view class="products-section" wx:if="{{products.length > 0}}">
+      <view class="section-header">
+        <view class="section-title">💊 推荐产品</view>
+      </view>
+      
+      <view class="product-grid">
+        <view 
+          class="product-card"
+          wx:for="{{products}}"
+          wx:key="id"
+          bindtap="onProductTap"
+          data-id="{{item.id}}"
+        >
+          <view class="product-image">
+            <image src="{{item.image}}" mode="aspectFill" />
+          </view>
+          <view class="product-info">
+            <view class="product-name">{{item.name}}</view>
+            <view class="product-brand">{{item.brand || '未知品牌'}}</view>
+            <view class="product-score">
+              <text class="score-star">⭐</text>
+              <text class="score-value">{{item.safety_score || 0}}</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
   </block>
 
+  <!-- 加载失败 -->
   <view class="empty-state" wx:else>
-    <text class="icon">🐾</text>
+    <text class="icon">😿</text>
     <text class="text">加载失败</text>
   </view>
 </view>

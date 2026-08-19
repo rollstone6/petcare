@@ -1,5 +1,6 @@
 {
   "navigationBarTitleText": "品种百科",
+  "enablePullDownRefresh": true,
   "usingComponents": {
     "tab-bar": "/components/tab-bar/tab-bar"
   }

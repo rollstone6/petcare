@@ -1,23 +1,78 @@
 <!--pages/breed/index.wxml-->
 <view class="page-breed">
-  <view class="loading" wx:if="{{loading}}">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading && breeds.length === 0}}">
     <view class="loading-text">加载中...</view>
   </view>
 
-  <view class="breed-list" wx:else>
-    <view class="breed-card card" wx:for="{{breeds}}" wx:key="id" bindtap="onBreedTap" data-id="{{item.id}}">
-      <image class="breed-image" src="{{item.image || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}" mode="aspectFill" />
-      <view class="breed-info">
-        <view class="breed-name">{{item.name}}</view>
-        <view class="breed-desc">{{item.description}}</view>
+  <block wx:else>
+    <!-- 物种分类Tab -->
+    <scroll-view class="species-tabs" scroll-x>
+      <view 
+        class="species-tab {{species === (item === '全部' ? '' : item) ? 'active' : ''}}"
+        wx:for="{{speciesList}}"
+        wx:key="*this"
+        bindtap="onSpeciesChange"
+        data-species="{{item}}"
+      >
+        <text class="icon">{{speciesIcons[item] || '🐾'}}</text>
+        <text class="label">{{item}}</text>
+      </view>
+    </scroll-view>
+
+    <!-- 排序选项 -->
+    <view class="sort-options">
+      <view class="sort-title">排序：</view>
+      <view 
+        class="sort-item {{sortBy === item.key ? 'active' : ''}}"
+        wx:for="{{sortOptions}}"
+        wx:key="key"
+        bindtap="onSortChange"
+        data-sort="{{item.key}}"
+      >
+        <text class="icon">{{item.icon}}</text>
+        <text class="label">{{item.label}}</text>
       </view>
     </view>
 
-    <view class="empty-state" wx:if="{{breeds.length == 0}}">
+    <!-- 品种网格 -->
+    <view class="breed-grid">
+      <view 
+        class="breed-card"
+        wx:for="{{breeds}}"
+        wx:key="id"
+        bindtap="onBreedTap"
+        data-id="{{item.id}}"
+      >
+        <view class="breed-avatar">
+          <image 
+            src="{{item.image || 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'}}"
+            mode="aspectFill"
+            lazy-load
+          />
+        </view>
+        <view class="breed-name">{{item.name}}</view>
+        <view class="breed-species">{{item.species}}</view>
+      </view>
+    </view>
+
+    <!-- 加载更多 -->
+    <view class="load-more" wx:if="{{loadingMore}}">
+      <view class="loading-spinner"></view>
+      <text>加载中...</text>
+    </view>
+
+    <!-- 没有更多 -->
+    <view class="no-more" wx:elif="{{!hasMore && breeds.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{!loading && breeds.length === 0}}">
       <text class="icon">🐾</text>
       <text class="text">暂无品种数据</text>
     </view>
-  </view>
+  </block>
 
   <tab-bar selected="{{2}}" />
 </view>
