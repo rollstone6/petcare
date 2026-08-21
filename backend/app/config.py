@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     api_prefix: str = "/api"
     jwt_secret: str = "change-me-in-production"
     cors_origins: str = "https://petcare.yjyblog.xyz,http://localhost:5173"
+    # 微信小程序登录（wx.login code2session），从 .env 注入，勿提交明文
+    wx_appid: str = ""
+    wx_app_secret: str = ""
 
     class Config:
         env_file = ".env"

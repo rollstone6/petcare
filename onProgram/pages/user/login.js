@@ -33,9 +33,16 @@ Page({
       wx.showToast({ title: '请输入密码', icon: 'none' })
       return
     }
-    if (password.length < 6) {
-      wx.showToast({ title: '密码至少6位', icon: 'none' })
-      return
+    // 注册时与后端校验规则保持一致：密码至少8位且包含字母和数字
+    if (isRegister) {
+      if (password.length < 8) {
+        wx.showToast({ title: '注册密码至少8位', icon: 'none' })
+        return
+      }
+      if (!/[a-zA-Z]/.test(password) || !/\d/.test(password)) {
+        wx.showToast({ title: '密码需包含字母和数字', icon: 'none' })
+        return
+      }
     }
 
     this.setData({ loading: true })
@@ -43,16 +50,19 @@ Page({
     try {
       let res
       if (isRegister) {
-        res = await api.register(username, password)
+        // 临时兼容：线上旧版后端 email 列 default=""+unique 会让无邮箱用户撞唯一约束(500)。
+        // 用用户名派生唯一占位邮箱规避；用户名本身唯一，邮箱必唯一。部署新版后端后此参数保留也无害。
+        res = await api.register({ username, password, email: `${username}@petcare.app` })
         wx.showToast({ title: '注册成功', icon: 'success' })
       } else {
-        res = await api.login(username, password)
+        res = await api.login({ username, password })
         wx.showToast({ title: '登录成功', icon: 'success' })
       }
 
       if (res && res.token) {
         api.setToken(res.token)
         app.globalData.isLogin = true
+        app.globalData.userInfo = res.user || null
         setTimeout(() => {
           wx.navigateBack()
         }, 1000)
@@ -65,16 +75,27 @@ Page({
     }
   },
 
-  onWechatLogin() {
-    wx.getUserProfile({
-      desc: '用于完善用户资料',
-      success: (res) => {
-        console.log('获取用户信息成功:', res.userInfo)
-        wx.showToast({ title: '微信登录功能开发中', icon: 'none' })
-      },
-      fail: (err) => {
-        console.error('获取用户信息失败:', err)
+  // 微信一键登录：wx.login 拿 code → 后端换 token（未绑定的微信自动注册新账号）
+  // wxLoginAuto 会在 code 失效时自动换新 code 重试一次（code 一次性使用）
+  async onWechatLogin() {
+    if (this.data.loading) return
+    this.setData({ loading: true })
+    try {
+      const res = await api.wxLoginAuto({ silent: true })
+      if (res && res.token) {
+        api.setToken(res.token)
+        app.globalData.isLogin = true
+        app.globalData.userInfo = res.user || null
+        wx.showToast({ title: res.is_new ? '已自动注册并登录' : '登录成功', icon: 'success' })
+        setTimeout(() => {
+          wx.navigateBack()
+        }, 1000)
       }
-    })
+    } catch (err) {
+      console.error('微信登录失败:', err)
+      wx.showToast({ title: err.message || '微信登录失败，请用账号密码登录', icon: 'none' })
+    } finally {
+      this.setData({ loading: false })
+    }
   }
 })

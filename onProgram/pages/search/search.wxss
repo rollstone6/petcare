@@ -3,6 +3,8 @@
 .page-search {
   min-height: 100vh;
   background: var(--bg-color);
+  /* 底部安全区留白（iPhone X 及以上机型的 Home 指示条区域） */
+  padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
 }
 
 /* 搜索头部 */

@@ -6,3 +6,9 @@ pydantic-settings==2.5.0
 alembic==1.13.0
 httpx==0.27.0
 python-multipart==0.0.12
+# 以下为 app.main / routers.ai 实际使用但此前遗漏的运行时依赖
+fastapi-cache2
+jinja2
+pyyaml
+# 测试（tests/）
+pytest

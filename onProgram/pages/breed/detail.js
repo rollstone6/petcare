@@ -3,8 +3,6 @@ const api = require('../../utils/api')
 const { formatImageUrl } = require('../../utils/util')
 const { SPECIES_ICONS } = require('../../utils/constants')
 
-const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
-
 Page({
   data: {
     breed: null,
@@ -26,7 +24,7 @@ Page({
       const breed = await api.getBreedDetail(this.breedId)
       
       // 处理图片URL
-      breed.image = formatImageUrl(breed.image_url, PLACEHOLDER)
+      breed.image = formatImageUrl(breed.image_url, api.PLACEHOLDER_IMAGE)
       
       // 处理性格标签（后端用顿号分隔）
       if (breed.temperament) {
@@ -56,7 +54,7 @@ Page({
       const result = await api.getBreedProducts(this.breedId)
       const products = (result.items || result || []).map(product => ({
         ...product,
-        image: formatImageUrl(product.image_url, PLACEHOLDER)
+        image: formatImageUrl(product.image_url, api.PLACEHOLDER_IMAGE)
       }))
       this.setData({ products })
     } catch (err) {

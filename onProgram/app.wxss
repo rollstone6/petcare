@@ -12,16 +12,47 @@ page {
   --border-color: #eeeeee;
   --bg-color: #f5f5f5;
   --white: #ffffff;
-  
+  /* 底部安全区高度（tab-bar 高度 100rpx + 安全区） */
+  --tab-bar-height: calc(100rpx + env(safe-area-inset-bottom));
+
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: 28rpx;
+  line-height: 1.5;
   color: var(--text-color);
   background-color: var(--bg-color);
 }
 
-/* 通用容器 */
-.container {
-  padding: 20rpx;
+/* ===== 移动端适配基础 ===== */
+/* 统一盒模型，避免 padding 导致元素撑破容器 */
+view, text, input, button, image, scroll-view, swiper, label, textarea, navigator {
+  box-sizing: border-box;
+}
+
+/* 长文本自动换行，避免长英文药名/化学名撑破卡片 */
+text, view {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+/* 图片自适应，防止大图溢出 */
+image {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 输入控件统一字号与盒模型（input/button 有内置样式，单独保证） */
+input, textarea {
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+/* 隐藏滚动条但保留滚动能力（横向筛选条等） */
+::-webkit-scrollbar {
+  display: none;
+  width: 0 !important;
+  height: 0 !important;
+  -webkit-appearance: none;
+  background: transparent;
 }
 
 /* 卡片样式 */
@@ -39,27 +70,6 @@ page {
 .safety-3 { color: #ff9500; }
 .safety-2 { color: #ff6b00; }
 .safety-1 { color: #fa5151; }
-
-/* 安全评分背景 */
-.safety-bg-5 { background-color: #e8f8ee; }
-.safety-bg-4 { background-color: #e8f8ee; }
-.safety-bg-3 { background-color: #fff8e6; }
-.safety-bg-2 { background-color: #fff0e6; }
-.safety-bg-1 { background-color: #ffebeb; }
-
-/* 按钮样式 */
-.btn-primary {
-  background: var(--primary-color);
-  color: var(--white);
-  border: none;
-  border-radius: 8rpx;
-  padding: 20rpx 40rpx;
-  font-size: 28rpx;
-}
-
-.btn-primary::after {
-  border: none;
-}
 
 /* 搜索框 */
 .search-bar {
@@ -89,29 +99,6 @@ page {
 .tag-primary {
   background: var(--primary-light);
   color: var(--primary-color);
-}
-
-.tag-warning {
-  background: #fff8e6;
-  color: #ff9500;
-}
-
-.tag-danger {
-  background: #ffebeb;
-  color: #fa5151;
-}
-
-/* 列表项 */
-.list-item {
-  display: flex;
-  align-items: center;
-  padding: 24rpx;
-  background: var(--white);
-  border-bottom: 1rpx solid var(--border-color);
-}
-
-.list-item:last-child {
-  border-bottom: none;
 }
 
 /* 空状态 */

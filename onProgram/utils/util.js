@@ -1,19 +1,3 @@
-const formatTime = date => {
-  const year = date.getFullYear()
-  const month = date.getMonth() + 1
-  const day = date.getDate()
-  const hour = date.getHours()
-  const minute = date.getMinutes()
-  const second = date.getSeconds()
-
-  return `${[year, month, day].map(formatNumber).join('/')} ${[hour, minute, second].map(formatNumber).join(':')}`
-}
-
-const formatNumber = n => {
-  n = n.toString()
-  return n[1] ? n : `0${n}`
-}
-
 /**
  * 将相对路径图片URL转为完整URL
  * @param {string} url - 图片URL（可能是相对路径如 /avatars/xxx.webp）
@@ -31,6 +15,5 @@ const formatImageUrl = (url, fallback = '') => {
 }
 
 module.exports = {
-  formatTime,
   formatImageUrl
 }

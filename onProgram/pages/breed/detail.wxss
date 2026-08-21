@@ -3,7 +3,8 @@
 .page-detail {
   min-height: 100vh;
   background: var(--bg-color);
-  padding-bottom: 40rpx;
+  /* 底部安全区留白 */
+  padding-bottom: calc(40rpx + env(safe-area-inset-bottom));
 }
 
 /* 头部信息区 */
@@ -47,7 +48,9 @@
   color: var(--text-color);
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   gap: 12rpx;
+  overflow-wrap: break-word;
 }
 
 .breed-name-en {

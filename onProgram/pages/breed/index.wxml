@@ -8,15 +8,17 @@
   <block wx:else>
     <!-- 物种分类Tab -->
     <scroll-view class="species-tabs" scroll-x>
-      <view 
-        class="species-tab {{species === (item === '全部' ? '' : item) ? 'active' : ''}}"
-        wx:for="{{speciesList}}"
-        wx:key="*this"
-        bindtap="onSpeciesChange"
-        data-species="{{item}}"
-      >
-        <text class="icon">{{speciesIcons[item] || '🐾'}}</text>
-        <text class="label">{{item}}</text>
+      <view class="species-tabs-inner">
+        <view 
+          class="species-tab {{species === (item === '全部' ? '' : item) ? 'active' : ''}}"
+          wx:for="{{speciesList}}"
+          wx:key="*this"
+          bindtap="onSpeciesChange"
+          data-species="{{item}}"
+        >
+          <text class="icon">{{speciesIcons[item] || '🐾'}}</text>
+          <text class="label">{{item}}</text>
+        </view>
       </view>
     </scroll-view>
 

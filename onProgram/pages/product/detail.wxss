@@ -3,7 +3,8 @@
 .page-detail {
   min-height: 100vh;
   background: var(--bg-color);
-  padding-bottom: 120rpx;
+  /* 预留底部操作栏高度 + 安全区，避免内容被遮挡 */
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
 }
 
 /* 产品图片 */
@@ -19,6 +20,12 @@
 }
 
 /* 信息卡片 */
+/* 页内卡片统一左右留白，避免贴边（首张卡片在 info-card 中单独设置负 margin 叠压图片） */
+.page-detail > .card {
+  margin-left: 20rpx;
+  margin-right: 20rpx;
+}
+
 .info-card {
   margin: -40rpx 20rpx 20rpx;
   position: relative;
@@ -105,11 +112,17 @@
 }
 
 .ingredient-name {
+  flex: 1;
+  min-width: 0;
   font-size: 28rpx;
   color: var(--text-color);
+  margin-right: 16rpx;
+  /* 长成分名自动换行，不挤压风险标签 */
+  overflow-wrap: break-word;
 }
 
 .ingredient-risk {
+  flex-shrink: 0;
   font-size: 24rpx;
   padding: 4rpx 16rpx;
   border-radius: 4rpx;

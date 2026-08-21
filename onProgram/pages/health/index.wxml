@@ -1,0 +1,101 @@
+<!--pages/health/index.wxml-->
+<view class="page-health">
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:else>
+    <!-- 宠物筛选 -->
+    <scroll-view class="pet-filter" scroll-x wx:if="{{pets.length > 0}}">
+      <view class="pet-filter-inner">
+        <view class="filter-chip {{filterPet === '' ? 'active' : ''}}" bindtap="onFilterTap" data-pet="">全部</view>
+        <view
+          class="filter-chip {{filterPet === item.pet_name ? 'active' : ''}}"
+          wx:for="{{pets}}"
+          wx:key="id"
+          bindtap="onFilterTap"
+          data-pet="{{item.pet_name}}"
+        >{{item.pet_name}}</view>
+      </view>
+    </scroll-view>
+
+    <!-- 日程列表 -->
+    <view class="schedule-list" wx:if="{{filteredSchedules.length > 0}}">
+      <view class="schedule-card card status-{{item.status}}" wx:for="{{filteredSchedules}}" wx:key="id">
+        <view class="schedule-head">
+          <view class="schedule-icon">{{item.type_icon}}</view>
+          <view class="schedule-title-info">
+            <view class="schedule-title">{{item.title}}</view>
+            <view class="schedule-pet">🐾 {{item.pet_name}} · 每{{item.interval_days}}天</view>
+          </view>
+          <view class="schedule-countdown">
+            <block wx:if="{{item.days_left !== null}}">
+              <text class="countdown-num">{{item.days_left < 0 ? '+' + (0 - item.days_left) : item.days_left}}</text>
+              <text class="countdown-label">{{item.days_left < 0 ? '天已超' : '天后'}}</text>
+            </block>
+            <text class="countdown-label" wx:else>未开始</text>
+          </view>
+        </view>
+
+        <view class="schedule-body">
+          <view class="schedule-status-row">
+            <text class="status-badge">{{item.status_label}}</text>
+            <text class="next-due" wx:if="{{item.next_due_fmt}}">下次：{{item.next_due_fmt}}</text>
+          </view>
+          <view class="schedule-note" wx:if="{{item.note}}">{{item.note}}</view>
+        </view>
+
+        <view class="schedule-actions">
+          <view class="schedule-btn done" catchtap="onMarkDone" data-id="{{item.id}}">✓ 标记完成</view>
+          <view class="schedule-btn del" catchtap="onDeleteSchedule" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{filteredSchedules.length === 0 && !showForm}}">
+      <text class="icon">🗓️</text>
+      <text class="text">暂无提醒</text>
+      <text class="sub">添加驱虫/疫苗/体检提醒，不再错过</text>
+      <view class="empty-add-btn" wx:if="{{pets.length === 0}}" bindtap="onGoPets">先去添加宠物</view>
+    </view>
+
+    <!-- 添加按钮 -->
+    <view class="add-btn" wx:if="{{!showForm}}" bindtap="onAddTap">＋ 添加提醒</view>
+
+    <!-- 添加表单 -->
+    <view class="form-card card" wx:if="{{showForm}}">
+      <view class="form-title">添加提醒</view>
+
+      <view class="form-item">
+        <text class="form-label">选择宠物</text>
+        <picker mode="selector" range="{{pets}}" range-key="pet_name" value="{{formData.petIndex}}" bindchange="onFormPetChange">
+          <view class="form-picker">{{pets[formData.petIndex].pet_name}}</view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">提醒类型</text>
+        <picker mode="selector" range="{{scheduleTypes}}" value="{{formData.typeIndex}}" bindchange="onFormTypeChange">
+          <view class="form-picker">{{scheduleTypes[formData.typeIndex]}}</view>
+        </picker>
+      </view>
+
+      <block wx:if="{{scheduleTypes[formData.typeIndex] === '自定义'}}">
+        <view class="form-item">
+          <text class="form-label">提醒标题 *</text>
+          <input class="form-input" value="{{formData.title}}" bindinput="onFormTitleInput" placeholder="如：剪指甲" maxlength="30" />
+        </view>
+        <view class="form-item">
+          <text class="form-label">间隔天数</text>
+          <input class="form-input" type="number" value="{{formData.interval}}" bindinput="onFormIntervalInput" placeholder="默认 30 天" />
+        </view>
+      </block>
+
+      <view class="form-btns">
+        <view class="form-btn cancel" bindtap="onCancelForm">取消</view>
+        <view class="form-btn submit" bindtap="onSubmitSchedule">创建</view>
+      </view>
+    </view>
+  </block>
+</view>

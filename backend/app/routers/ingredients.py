@@ -1,6 +1,7 @@
 """宠物宝 (PetCare) — 成分 API"""
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import Optional
 from app.database import get_db
 from app import models, schemas
@@ -23,6 +24,26 @@ def get_dangerous_ingredients(
     return schemas.ApiResponse(data={
         "items": [schemas.Ingredient.model_validate(i).model_dump() for i in ingredients]
     })
+
+
+@router.get("/categories", response_model=schemas.ApiResponse)
+def get_ingredient_categories(db: Session = Depends(get_db)):
+    """获取成分分类列表（对现有成分数据去重聚合，按数量降序）
+
+    注意：此路由必须定义在 /{ingredient_id} 之前，否则会被路径参数路由拦截。
+    """
+    rows = (
+        db.query(
+            models.Ingredient.category,
+            func.count(models.Ingredient.id).label("count"),
+        )
+        .filter(models.Ingredient.category.isnot(None), models.Ingredient.category != "")
+        .group_by(models.Ingredient.category)
+        .order_by(func.count(models.Ingredient.id).desc())
+        .all()
+    )
+    items = [{"name": cat, "value": cat, "count": cnt} for cat, cnt in rows]
+    return schemas.ApiResponse(data={"items": items})
 
 
 @router.get("", response_model=schemas.ApiResponse)

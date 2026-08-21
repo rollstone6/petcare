@@ -3,8 +3,6 @@ const api = require('../../utils/api')
 const { formatImageUrl } = require('../../utils/util')
 const app = getApp()
 
-const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
-
 Page({
   data: {
     product: null,
@@ -29,14 +27,15 @@ Page({
       const product = await api.getProductDetail(this.productId)
       
       // 处理图片URL
-      product.image = formatImageUrl(product.image_url, PLACEHOLDER)
+      product.image = formatImageUrl(product.image_url, api.PLACEHOLDER_IMAGE)
       
-      // 检查是否已收藏
+      // 检查是否已收藏（/favorites 返回 { items: [产品列表] }，item.id 即产品ID）
       let isFavorite = false
       if (app.globalData.isLogin) {
         try {
-          const favorites = await api.getFavorites()
-          isFavorite = favorites.some(f => f.product_id == this.productId)
+          const result = await api.getFavorites()
+          const items = (result && result.items) || []
+          isFavorite = items.some(p => p.id == this.productId)
         } catch (e) {}
       }
       
@@ -91,11 +90,8 @@ Page({
 
     try {
       if (this.data.isFavorite) {
-        const favorites = await api.getFavorites()
-        const fav = favorites.find(f => f.product_id == this.productId)
-        if (fav) {
-          await api.removeFavorite(fav.id)
-        }
+        // 后端 DELETE /favorites/{product_id} 以产品ID为参数
+        await api.removeFavorite(this.productId)
         this.setData({ isFavorite: false })
         wx.showToast({ title: '已取消收藏', icon: 'none' })
       } else {

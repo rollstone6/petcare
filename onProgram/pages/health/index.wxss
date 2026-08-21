@@ -1,0 +1,328 @@
+/* pages/health/index.wxss */
+
+.page-health {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding: 20rpx 24rpx;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 40rpx);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 80rpx 0;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: var(--text-light);
+}
+
+/* 宠物筛选 */
+.pet-filter {
+  white-space: nowrap;
+  margin-bottom: 20rpx;
+}
+
+.pet-filter-inner {
+  display: inline-flex;
+  gap: 16rpx;
+  padding: 4rpx;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 10rpx 28rpx;
+  border-radius: 30rpx;
+  background: var(--white);
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  border: 1rpx solid var(--border-color);
+}
+
+.filter-chip.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+
+/* 日程卡片 */
+.schedule-card {
+  margin-bottom: 20rpx;
+  padding: 24rpx;
+  border-left: 8rpx solid var(--primary-color);
+}
+
+.schedule-card.status-overdue {
+  border-left-color: #fa5151;
+}
+
+.schedule-card.status-urgent {
+  border-left-color: #ff9500;
+}
+
+.schedule-card.status-warning {
+  border-left-color: #ffd60a;
+}
+
+.schedule-card.status-normal {
+  border-left-color: var(--primary-color);
+}
+
+.schedule-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.schedule-icon {
+  width: 80rpx;
+  height: 80rpx;
+  flex-shrink: 0;
+  border-radius: 20rpx;
+  background: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.schedule-title-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-pet {
+  font-size: 22rpx;
+  color: var(--text-light);
+}
+
+.schedule-countdown {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-left: 16rpx;
+}
+
+.countdown-num {
+  font-size: 44rpx;
+  font-weight: 800;
+  color: var(--primary-color);
+  line-height: 1.1;
+}
+
+.status-overdue .countdown-num {
+  color: #fa5151;
+}
+
+.status-urgent .countdown-num {
+  color: #ff9500;
+}
+
+.status-warning .countdown-num {
+  color: #e6ac00;
+}
+
+.countdown-label {
+  font-size: 20rpx;
+  color: var(--text-light);
+}
+
+.schedule-status-row {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 10rpx;
+}
+
+.status-badge {
+  font-size: 20rpx;
+  padding: 2rpx 16rpx;
+  border-radius: 16rpx;
+  background: #e8f8ee;
+  color: var(--primary-color);
+}
+
+.status-overdue .status-badge {
+  background: #ffebeb;
+  color: #fa5151;
+}
+
+.status-urgent .status-badge {
+  background: #fff2e0;
+  color: #ff9500;
+}
+
+.status-warning .status-badge {
+  background: #fff9d6;
+  color: #b78a00;
+}
+
+.next-due {
+  font-size: 22rpx;
+  color: var(--text-light);
+}
+
+.schedule-note {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  overflow-wrap: break-word;
+}
+
+.schedule-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.schedule-btn {
+  flex: 1;
+  padding: 16rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+}
+
+.schedule-btn.done {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.schedule-btn.del {
+  background: var(--bg-color);
+  color: var(--text-secondary);
+}
+
+.schedule-btn:active {
+  opacity: 0.85;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0 40rpx;
+}
+
+.empty-state .icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-state .text {
+  font-size: 30rpx;
+  color: var(--text-color);
+  margin-bottom: 12rpx;
+}
+
+.empty-state .sub {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-bottom: 32rpx;
+}
+
+.empty-add-btn {
+  font-size: 26rpx;
+  color: #fff;
+  background: var(--primary-color);
+  padding: 16rpx 48rpx;
+  border-radius: 32rpx;
+}
+
+/* 添加按钮 */
+.add-btn {
+  margin-top: 24rpx;
+  padding: 26rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #fff;
+  background: var(--primary-color);
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.3);
+}
+
+.add-btn:active {
+  opacity: 0.85;
+}
+
+/* 表单 */
+.form-card {
+  margin-top: 24rpx;
+  padding: 28rpx 24rpx;
+}
+
+.form-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 24rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.form-input,
+.form-picker {
+  width: 100%;
+  height: 84rpx;
+  padding: 0 24rpx;
+  background: var(--bg-color);
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.form-btns {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+
+.form-btn {
+  flex: 1;
+  padding: 22rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+}
+
+.form-btn.cancel {
+  background: var(--bg-color);
+  color: var(--text-secondary);
+}
+
+.form-btn.submit {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.form-btn:active {
+  opacity: 0.85;
+}

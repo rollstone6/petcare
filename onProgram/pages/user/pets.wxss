@@ -1,0 +1,256 @@
+/* pages/user/pets.wxss */
+
+.page-pets {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding: 20rpx 24rpx;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 40rpx);
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 80rpx 0;
+}
+
+.loading-text {
+  font-size: 28rpx;
+  color: var(--text-light);
+}
+
+.pet-card {
+  margin-bottom: 20rpx;
+  padding: 24rpx;
+}
+
+.pet-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.pet-avatar {
+  width: 96rpx;
+  height: 96rpx;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #e8f8ee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.pet-head-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pet-name-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 6rpx;
+}
+
+.pet-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-color);
+  max-width: 260rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.age-category {
+  font-size: 20rpx;
+  color: var(--primary-color);
+  background: #e8f8ee;
+  padding: 2rpx 14rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.pet-breed {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.pet-actions {
+  display: flex;
+  gap: 12rpx;
+  flex-shrink: 0;
+}
+
+.pet-action {
+  font-size: 22rpx;
+  color: var(--text-secondary);
+  padding: 8rpx 18rpx;
+  border: 1rpx solid var(--border-color);
+  border-radius: 20rpx;
+}
+
+.pet-action.danger {
+  color: var(--danger-color);
+  border-color: rgba(250, 81, 81, 0.4);
+}
+
+.pet-action:active {
+  opacity: 0.7;
+}
+
+.pet-info {
+  display: flex;
+  flex-wrap: wrap;
+  background: var(--bg-color);
+  border-radius: 12rpx;
+  padding: 16rpx 8rpx;
+}
+
+.info-cell {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.info-label {
+  font-size: 22rpx;
+  color: var(--text-light);
+  margin-bottom: 6rpx;
+}
+
+.info-value {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.pet-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 16rpx;
+}
+
+.health-tag {
+  font-size: 20rpx;
+  color: #ff9500;
+  background: #fff6e0;
+  padding: 4rpx 16rpx;
+  border-radius: 16rpx;
+}
+
+/* 空状态 */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0 40rpx;
+}
+
+.empty-state .icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-state .text {
+  font-size: 30rpx;
+  color: var(--text-color);
+  margin-bottom: 12rpx;
+}
+
+.empty-state .sub {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+/* 添加按钮 */
+.add-btn {
+  margin-top: 24rpx;
+  padding: 26rpx;
+  text-align: center;
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #fff;
+  background: var(--primary-color);
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.3);
+}
+
+.add-btn:active {
+  opacity: 0.85;
+}
+
+/* ===== 表单 ===== */
+.form-card {
+  margin-top: 24rpx;
+  padding: 28rpx 24rpx;
+}
+
+.form-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 24rpx;
+}
+
+.form-item {
+  margin-bottom: 24rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  margin-bottom: 12rpx;
+}
+
+.form-input,
+.form-picker {
+  width: 100%;
+  height: 84rpx;
+  padding: 0 24rpx;
+  background: var(--bg-color);
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.form-picker.placeholder {
+  color: var(--text-light);
+}
+
+.form-btns {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 32rpx;
+}
+
+.form-btn {
+  flex: 1;
+  padding: 22rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+}
+
+.form-btn.cancel {
+  background: var(--bg-color);
+  color: var(--text-secondary);
+}
+
+.form-btn.submit {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.form-btn:active {
+  opacity: 0.85;
+}

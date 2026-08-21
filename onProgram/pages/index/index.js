@@ -2,14 +2,13 @@
 const api = require('../../utils/api')
 const { formatImageUrl } = require('../../utils/util')
 
-const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
-
 Page({
   data: {
     searchValue: '',
     categories: [],
     hotProducts: [],
-    loading: true
+    loading: true,
+    placeholder: api.PLACEHOLDER_IMAGE
   },
 
   onLoad() {
@@ -35,7 +34,7 @@ Page({
       const items = products.items || products || []
       const formattedProducts = items.map(item => ({
         ...item,
-        image: formatImageUrl(item.image_url, PLACEHOLDER)
+        image: formatImageUrl(item.image_url, api.PLACEHOLDER_IMAGE)
       }))
       
       this.setData({
@@ -92,14 +91,5 @@ Page({
     wx.navigateTo({
       url: '/pages/search/search'
     })
-  },
-
-  // 获取安全评分颜色
-  getSafetyClass(score) {
-    if (score >= 4.5) return 'safety-5'
-    if (score >= 3.5) return 'safety-4'
-    if (score >= 2.5) return 'safety-3'
-    if (score >= 1.5) return 'safety-2'
-    return 'safety-1'
   }
 })

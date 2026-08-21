@@ -1,0 +1,45 @@
+<!--pages/user/favorites.wxml-->
+<view class="page-favorites">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:else>
+    <view class="fav-list" wx:if="{{favorites.length > 0}}">
+      <view
+        class="fav-item card"
+        wx:for="{{favorites}}"
+        wx:key="id"
+        bindtap="onProductTap"
+        data-id="{{item.id}}"
+      >
+        <view class="fav-cover">
+          <image
+            src="{{item.image_url || placeholder}}"
+            mode="aspectFill"
+            lazy-load
+          />
+        </view>
+        <view class="fav-body">
+          <view class="fav-name">{{item.name}}</view>
+          <view class="fav-meta">
+            <text wx:if="{{item.brand}}" class="meta-tag brand">{{item.brand}}</text>
+            <text wx:if="{{item.category}}" class="meta-tag">{{item.category}}</text>
+          </view>
+          <view class="fav-score" wx:if="{{item.safety_score !== null && item.safety_score !== undefined}}">
+            安全评分 <text class="score-num">{{item.safety_score}}</text>
+          </view>
+        </view>
+        <view class="fav-remove" catchtap="onRemoveFavorite" data-id="{{item.id}}">✕</view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:else>
+      <text class="icon">💛</text>
+      <text class="text">暂无收藏，去逛逛吧</text>
+      <view class="empty-btn" bindtap="onGoHome">去首页看看</view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,37 @@
+<!--pages/user/reviews.wxml-->
+<view class="page-reviews">
+  <view class="loading" wx:if="{{loading && reviews.length === 0}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:else>
+    <view class="review-list" wx:if="{{reviews.length > 0}}">
+      <view class="review-item card" wx:for="{{reviews}}" wx:key="id">
+        <view class="review-product" bindtap="onProductTap" data-product-id="{{item.product_id}}">
+          <text class="product-icon">📦</text>
+          <text class="product-name">{{item.product_name}}</text>
+          <text class="product-arrow">›</text>
+        </view>
+        <view class="review-stars">{{item.stars}}</view>
+        <view class="review-content" wx:if="{{item.content}}">{{item.content}}</view>
+        <view class="review-footer">
+          <view class="review-meta">
+            <text wx:if="{{item.pet_type}}" class="meta-chip">{{item.pet_type}}</text>
+            <text wx:if="{{item.pet_age}}" class="meta-chip">{{item.pet_age}}</text>
+            <text class="review-time">{{item.created_at_fmt}}</text>
+          </view>
+          <view class="review-delete" catchtap="onDeleteReview" data-id="{{item.id}}">删除</view>
+        </view>
+      </view>
+
+      <view class="load-more" wx:if="{{loading && reviews.length > 0}}">加载中...</view>
+      <view class="no-more" wx:if="{{reviews.length >= total}}">没有更多了</view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:else>
+      <text class="icon">📝</text>
+      <text class="text">还没有写过评价</text>
+    </view>
+  </block>
+</view>

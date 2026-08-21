@@ -3,8 +3,6 @@ const api = require('../../utils/api')
 const { formatImageUrl } = require('../../utils/util')
 const { SPECIES_ICONS, SORT_OPTIONS, PAGE_SIZE } = require('../../utils/constants')
 
-const PLACEHOLDER = 'https://website-petcare-oss-bj.oss-cn-beijing.aliyuncs.com/images/placeholder.png'
-
 Page({
   data: {
     breeds: [],
@@ -66,7 +64,7 @@ Page({
       const result = await api.getBreeds(params)
       const items = (result.items || result || []).map(breed => ({
         ...breed,
-        image: formatImageUrl(breed.image_url, PLACEHOLDER)
+        image: formatImageUrl(breed.image_url, api.PLACEHOLDER_IMAGE)
       }))
 
       this.setData({

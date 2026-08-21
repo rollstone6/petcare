@@ -66,11 +66,16 @@
 .product-item:last-child { border-bottom: none; }
 
 .product-name {
+  flex: 1;
+  min-width: 0;
   font-size: 28rpx;
   color: var(--text-color);
+  margin-right: 16rpx;
+  overflow-wrap: break-word;
 }
 
 .product-brand {
+  flex-shrink: 0;
   font-size: 24rpx;
   color: var(--text-light);
 }

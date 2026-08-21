@@ -17,24 +17,32 @@ Page({
     this.loadIngredients()
   },
 
-  // 加载分类
+  // 加载成分分类
   async loadCategories() {
     try {
-      const categories = await api.getCategories()
+      const result = await api.getIngredientCategories()
+      const items = (result && result.items) || result || []
       this.setData({
-        categories: [{ name: '全部', value: '' }, ...(categories || [])]
+        categories: [{ name: '全部', value: '' }].concat(
+          items.map(c => ({ name: c.name, value: c.value != null ? c.value : c.name }))
+        )
       })
     } catch (err) {
-      console.error('加载分类失败:', err)
-      // 使用默认分类
+      console.error('加载成分分类失败:', err)
+      // 兜底：后端暂未提供 /ingredients/categories 时使用库内现有分类
       this.setData({
         categories: [
           { name: '全部', value: '' },
-          { name: '防腐剂', value: 'preservative' },
-          { name: '香精', value: 'fragrance' },
-          { name: '色素', value: 'colorant' },
-          { name: '表面活性剂', value: 'surfactant' },
-          { name: '保湿剂', value: 'moisturizer' }
+          { name: '营养', value: '营养' },
+          { name: '食品成分', value: '食品成分' },
+          { name: '保健品成分', value: '保健品成分' },
+          { name: '矿物质', value: '矿物质' },
+          { name: '蛋白质', value: '蛋白质' },
+          { name: '维生素', value: '维生素' },
+          { name: '驱虫', value: '驱虫' },
+          { name: '疫苗', value: '疫苗' },
+          { name: '防腐剂', value: '防腐剂' },
+          { name: '抗生素', value: '抗生素' }
         ]
       })
     }
@@ -58,7 +66,7 @@ Page({
         params.category = this.data.currentCategory
       }
       if (this.data.searchValue) {
-        params.keyword = this.data.searchValue
+        params.q = this.data.searchValue
       }
 
       const result = await api.getIngredients(params)

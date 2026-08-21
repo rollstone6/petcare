@@ -45,8 +45,10 @@ async function request(path, options = {}) {
 
 export const api = {
   // 用户
+  // 临时兼容：未提供邮箱时用用户名派生唯一占位邮箱，规避线上旧版后端
+  // email default=""+unique 导致无邮箱用户注册 500 的问题（部署新版后端后保留也无害）
   register: (username, password, email = '') =>
-    request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, email }) }),
+    request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, email: email || `${username}@petcare.app` }) }),
   login: (username, password) =>
     request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) }),
   getMe: () => request('/auth/me'),

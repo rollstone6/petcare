@@ -8,7 +8,12 @@
     "pages/breed/index",
     "pages/breed/detail",
     "pages/user/index",
-    "pages/user/login"
+    "pages/user/login",
+    "pages/user/pets",
+    "pages/user/favorites",
+    "pages/user/reviews",
+    "pages/user/settings",
+    "pages/health/index"
   ],
   "window": {
     "navigationBarTextStyle": "black",

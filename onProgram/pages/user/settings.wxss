@@ -1,0 +1,65 @@
+/* pages/user/settings.wxss */
+
+.page-settings {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding: 20rpx 24rpx;
+  padding-bottom: calc(env(safe-area-inset-bottom) + 40rpx);
+}
+
+.tap-hover {
+  opacity: 0.7;
+}
+
+.settings-group {
+  margin-bottom: 24rpx;
+  padding: 8rpx 28rpx;
+}
+
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+  font-size: 28rpx;
+}
+
+.settings-item:last-child {
+  border-bottom: none;
+}
+
+.settings-label {
+  color: var(--text-color);
+}
+
+.settings-value {
+  color: var(--text-light);
+  font-size: 26rpx;
+}
+
+.settings-arrow {
+  color: #cccccc;
+  font-size: 32rpx;
+}
+
+/* 覆盖 button 默认样式（意见反馈用原生 button open-type） */
+.feedback-btn {
+  width: 100%;
+  background: transparent;
+  border-radius: 0;
+  line-height: inherit;
+  margin: 0;
+  text-align: left;
+}
+
+.feedback-btn::after {
+  border: none;
+}
+
+.settings-footer {
+  text-align: center;
+  font-size: 24rpx;
+  color: var(--text-light);
+  padding: 60rpx 0 20rpx;
+}

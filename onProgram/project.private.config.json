@@ -3,7 +3,7 @@
   "projectname": "onProgram",
   "setting": {
     "compileHotReLoad": true,
-    "skylineRenderEnable": true,
+    "skylineRenderEnable": false,
     "urlCheck": false,
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
@@ -16,7 +16,7 @@
     "showES6CompileOption": false,
     "bigPackageSizeSupport": false,
     "checkInvalidKey": true,
-    "ignoreDevUnusedFiles": true
+    "ignoreDevUnusedFiles": false
   },
   "libVersion": "3.16.2",
   "condition": {}

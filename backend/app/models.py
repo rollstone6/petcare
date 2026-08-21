@@ -136,10 +136,13 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String(50), unique=True, index=True, nullable=False)
-    email = Column(String(100), unique=True, default="")
+    email = Column(String(100), unique=True, nullable=True)  # 无默认值：多个空邮箱(NULL)不冲突
     hashed_password = Column(String(200), nullable=False)
     nickname = Column(String(50), default="")
     avatar_url = Column(String(500), default="")
+    # 微信登录：小程序 openid（唯一标识微信用户）；unionid 预留（绑定微信开放平台后可跨端识别）
+    wx_openid = Column(String(64), unique=True, nullable=True, index=True)
+    wx_unionid = Column(String(64), nullable=True)
     created_at = Column(DateTime, default=func.now())
 
     favorites = relationship("Favorite", back_populates="user")

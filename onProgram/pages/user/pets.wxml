@@ -1,0 +1,128 @@
+<!--pages/user/pets.wxml-->
+<view class="page-pets">
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-text">加载中...</view>
+  </view>
+
+  <block wx:else>
+    <!-- 宠物列表 -->
+    <view class="pet-list" wx:if="{{pets.length > 0}}">
+      <view class="pet-card card" wx:for="{{pets}}" wx:key="id">
+        <view class="pet-head">
+          <view class="pet-avatar">{{item.species_icon}}</view>
+          <view class="pet-head-info">
+            <view class="pet-name-row">
+              <text class="pet-name">{{item.pet_name}}</text>
+              <text class="age-category" wx:if="{{item.age_category}}">{{item.age_category}}</text>
+            </view>
+            <view class="pet-breed" wx:if="{{item.breed}}">{{item.breed.species}} · {{item.breed.name}}</view>
+          </view>
+          <view class="pet-actions">
+            <view class="pet-action" catchtap="onEditTap" data-id="{{item.id}}">编辑</view>
+            <view class="pet-action danger" catchtap="onDeleteTap" data-id="{{item.id}}">删除</view>
+          </view>
+        </view>
+
+        <view class="pet-info">
+          <view class="info-cell" wx:if="{{item.age}}">
+            <text class="info-label">年龄</text>
+            <text class="info-value">{{item.age}}</text>
+          </view>
+          <view class="info-cell" wx:if="{{item.gender}}">
+            <text class="info-label">性别</text>
+            <text class="info-value">{{item.gender}}</text>
+          </view>
+          <view class="info-cell" wx:if="{{item.weight}}">
+            <text class="info-label">体重</text>
+            <text class="info-value">{{item.weight}}kg</text>
+          </view>
+          <view class="info-cell" wx:if="{{item.birthday}}">
+            <text class="info-label">生日</text>
+            <text class="info-value">{{item.birthday}}</text>
+          </view>
+          <view class="info-cell" wx:if="{{item.body_condition}}">
+            <text class="info-label">体态</text>
+            <text class="info-value">{{item.body_condition}}</text>
+          </view>
+        </view>
+
+        <view class="pet-tags" wx:if="{{item.health_tags && item.health_tags.length > 0}}">
+          <text class="health-tag" wx:for="{{item.health_tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{pets.length === 0 && !showForm}}">
+      <text class="icon">🐾</text>
+      <text class="text">还没有宠物档案</text>
+      <text class="sub">添加后可获得专属喂养提醒和健康建议</text>
+    </view>
+
+    <!-- 添加按钮 -->
+    <view class="add-btn" wx:if="{{!showForm}}" bindtap="onAddTap">
+      ＋ {{pets.length > 0 ? '再添加一只' : '添加宠物'}}
+    </view>
+
+    <!-- 表单 -->
+    <view class="form-card card" wx:if="{{showForm}}">
+      <view class="form-title">{{editingId ? '编辑宠物' : '添加宠物'}}</view>
+
+      <view class="form-item">
+        <text class="form-label">名字 *</text>
+        <input class="form-input" value="{{formData.pet_name}}" bindinput="onNameInput" placeholder="给TA起个名字吧" maxlength="50" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">品种</text>
+        <picker mode="selector" range="{{breedOptions}}" value="{{formData.breedIndex}}" bindchange="onBreedChange">
+          <view class="form-picker {{formData.breedIndex >= 0 ? '' : 'placeholder'}}">
+            {{formData.breedIndex >= 0 ? breedOptions[formData.breedIndex] : '请选择品种（可选）'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">性别</text>
+        <picker mode="selector" range="{{genders}}" value="{{formData.genderIndex}}" bindchange="onGenderChange">
+          <view class="form-picker {{formData.genderIndex >= 0 ? '' : 'placeholder'}}">
+            {{formData.genderIndex >= 0 ? genders[formData.genderIndex] : '请选择性别'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">年龄</text>
+        <input class="form-input" value="{{formData.age}}" bindinput="onAgeInput" placeholder="如：2岁3个月" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">体重(kg)</text>
+        <input class="form-input" type="digit" value="{{formData.weight}}" bindinput="onWeightInput" placeholder="如：4.5" />
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">生日</text>
+        <picker mode="date" value="{{formData.birthday}}" bindchange="onBirthdayChange">
+          <view class="form-picker {{formData.birthday ? '' : 'placeholder'}}">
+            {{formData.birthday || '请选择生日'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <text class="form-label">体态</text>
+        <picker mode="selector" range="{{bodyConditions}}" value="{{formData.bodyIndex}}" bindchange="onBodyChange">
+          <view class="form-picker {{formData.bodyIndex >= 0 ? '' : 'placeholder'}}">
+            {{formData.bodyIndex >= 0 ? bodyConditions[formData.bodyIndex] : '请选择体态'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-btns">
+        <view class="form-btn cancel" bindtap="onCancelForm">取消</view>
+        <view class="form-btn submit" bindtap="onSubmitForm">保存</view>
+      </view>
+    </view>
+  </block>
+</view>

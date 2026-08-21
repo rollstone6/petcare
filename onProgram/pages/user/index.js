@@ -8,9 +8,10 @@ Page({
     userInfo: null,
     favorites: [],
     menuList: [
+      { icon: '🗓️', title: '健康记录', url: '/pages/health/index' },
+      { icon: '🐾', title: '我的宠物', url: '/pages/user/pets' },
       { icon: '❤️', title: '我的收藏', url: '/pages/user/favorites' },
       { icon: '📝', title: '我的评价', url: '/pages/user/reviews' },
-      { icon: '🐾', title: '我的宠物', url: '/pages/user/pets' },
       { icon: '⚙️', title: '设置', url: '/pages/user/settings' }
     ]
   },

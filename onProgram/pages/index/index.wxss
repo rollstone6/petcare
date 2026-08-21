@@ -3,7 +3,8 @@
 .page-index {
   min-height: 100vh;
   background: var(--bg-color);
-  padding-bottom: 120rpx;
+  /* 预留底部 tab-bar 高度 + 安全区，避免内容被遮挡 */
+  padding-bottom: calc(var(--tab-bar-height) + 20rpx);
 }
 
 /* 搜索栏 */

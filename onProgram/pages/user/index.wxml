@@ -1,36 +1,59 @@
 <!--pages/user/index.wxml-->
 <view class="page-user">
-  <!-- 用户信息区域 -->
+  <!-- 头部用户信息区 -->
   <view class="user-header">
-    <block wx:if="{{isLogin && userInfo}}">
-      <image class="avatar" src="{{userInfo.avatar || '/images/default-avatar.png'}}" />
-      <view class="user-info">
-        <view class="nickname">{{userInfo.nickname || userInfo.username}}</view>
-        <view class="user-desc">{{userInfo.bio || '这个人很懒，什么都没写~'}}</view>
-      </view>
-    </block>
-    <block wx:else>
-      <view class="avatar-placeholder">👤</view>
-      <view class="user-info">
-        <view class="login-btn" bindtap="onLoginTap">点击登录</view>
-        <view class="user-desc">登录后享受更多功能</view>
-      </view>
-    </block>
+    <!-- 装饰圆形 -->
+    <view class="header-decor decor-1"></view>
+    <view class="header-decor decor-2"></view>
+
+    <view class="header-content">
+      <block wx:if="{{isLogin && userInfo}}">
+        <image wx:if="{{userInfo.avatar}}" class="avatar" src="{{userInfo.avatar}}" mode="aspectFill" />
+        <view wx:else class="avatar-fallback">🐾</view>
+        <view class="user-info">
+          <view class="nickname-row">
+            <text class="nickname">{{userInfo.nickname || userInfo.username}}</text>
+            <view class="login-badge">已登录</view>
+          </view>
+          <view class="user-desc">{{userInfo.bio || '这个人很懒，什么都没写~'}}</view>
+        </view>
+      </block>
+      <block wx:else>
+        <view class="avatar-placeholder">🐾</view>
+        <view class="user-info">
+          <view class="nickname">未登录</view>
+          <view class="user-desc">登录后享受收藏、评价等更多功能</view>
+        </view>
+        <view class="header-login-btn" hover-class="tap-hover" bindtap="onLoginTap">去登录</view>
+      </block>
+    </view>
   </view>
 
-  <!-- 菜单列表 -->
-  <view class="menu-list card">
-    <view class="menu-item" wx:for="{{menuList}}" wx:key="title" bindtap="onMenuTap" data-url="{{item.url}}">
-      <view class="menu-left">
-        <text class="menu-icon">{{item.icon}}</text>
-        <text class="menu-title">{{item.title}}</text>
+  <!-- 功能区卡片（叠压头部下沿） -->
+  <view class="content-card">
+    <view class="card-section-title">我的服务</view>
+    <view class="menu-list">
+      <view
+        class="menu-item"
+        hover-class="tap-hover"
+        wx:for="{{menuList}}"
+        wx:key="title"
+        bindtap="onMenuTap"
+        data-url="{{item.url}}"
+      >
+        <view class="menu-left">
+          <view class="menu-icon-wrap icon-bg-{{index}}">
+            <text class="menu-icon">{{item.icon}}</text>
+          </view>
+          <text class="menu-title">{{item.title}}</text>
+        </view>
+        <text class="menu-arrow">›</text>
       </view>
-      <text class="menu-arrow">›</text>
     </view>
   </view>
 
   <!-- 退出登录 -->
-  <view class="logout-btn" wx:if="{{isLogin}}" bindtap="onLogout">
+  <view class="logout-btn" hover-class="tap-hover" wx:if="{{isLogin}}" bindtap="onLogout">
     退出登录
   </view>
 
