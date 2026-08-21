@@ -186,9 +186,12 @@ export default function Profile() {
       {mainTab === 'profile' ? (
         <>
           {/* 用户头像和基本信息 */}
-          <div className="bg-primary px-4 md:px-8 pt-8 md:pt-10 pb-8 md:pb-10 md:rounded-b-3xl">
-            <div className="max-w-4xl mx-auto flex items-center gap-4 md:gap-6">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-full flex items-center justify-center text-3xl md:text-4xl">
+          <div
+            className="bg-primary md:rounded-b-3xl"
+            onClick={!state.user ? () => { setShowLogin(true); setIsRegister(false); setError('') } : undefined}
+          >
+            <div className="px-4 md:px-8 pt-8 md:pt-10 pb-8 md:pb-10 max-w-4xl mx-auto flex items-center gap-4 md:gap-6 cursor-pointer active:bg-white/10 transition-colors rounded-xl md:rounded-b-3xl">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 rounded-full flex items-center justify-center text-3xl md:text-4xl flex-shrink-0">
                 {state.user ? '🐾' : '👤'}
               </div>
               <div className="text-white flex-1">
@@ -196,15 +199,10 @@ export default function Profile() {
                 {state.user ? (
                   <div className="flex items-center gap-3 mt-1">
                     <p className="text-green-100 text-sm md:text-base">@{state.user.username}</p>
-                    <button onClick={handleLogout} className="text-green-200 text-xs hover:text-white">退出登录</button>
+                    <button onClick={e => { e.stopPropagation(); handleLogout() }} className="text-green-200 text-xs hover:text-white">退出登录</button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => { setShowLogin(true); setIsRegister(false); setError('') }}
-                    className="text-green-100 text-sm md:text-base mt-1 hover:text-white"
-                  >
-                    登录 / 注册 →
-                  </button>
+                  <p className="text-green-100 text-sm md:text-base mt-1">登录 / 注册 →</p>
                 )}
               </div>
             </div>
