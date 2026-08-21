@@ -16,10 +16,33 @@
         <text class="settings-arrow" bindtap="onBindWechat">›</text>
       </block>
     </view>
+    <view class="settings-item" wx:if="{{isLogin}}">
+      <text class="settings-label clickable" bindtap="onTogglePasswordForm">🔐 {{hasPassword ? '修改密码' : '设置账号密码'}}</text>
+      <text class="settings-arrow" bindtap="onTogglePasswordForm">›</text>
+    </view>
     <view class="settings-item">
       <text class="settings-label">版本号</text>
       <text class="settings-value">v{{version}}</text>
     </view>
+  </view>
+
+  <!-- 设置/修改密码表单（点「设置账号密码」后展开） -->
+  <view class="settings-group card password-form" wx:if="{{showPasswordForm}}">
+    <view class="form-title">{{hasPassword ? '修改密码' : '设置账号密码'}}</view>
+    <view class="form-tip" wx:if="{{!hasPassword}}">设置后可在电脑网页版用「用户名+密码」登录同一账号</view>
+    <view class="form-item" wx:if="{{!hasPassword}}">
+      <input class="form-input" placeholder="用户名（2-20位，可选，便于PC登录）" value="{{newUsername}}" bindinput="onNewUsernameInput" />
+    </view>
+    <view class="form-item" wx:if="{{hasPassword}}">
+      <input class="form-input" password placeholder="原密码" value="{{oldPassword}}" bindinput="onOldPasswordInput" />
+    </view>
+    <view class="form-item">
+      <input class="form-input" password placeholder="新密码（至少8位，含字母和数字）" value="{{newPassword}}" bindinput="onNewPasswordInput" />
+    </view>
+    <view class="form-item">
+      <input class="form-input" password placeholder="确认新密码" value="{{confirmPassword}}" bindinput="onConfirmPasswordInput" />
+    </view>
+    <button class="form-submit" bindtap="onSubmitPassword" disabled="{{submitting}}">{{submitting ? '提交中...' : '确认设置'}}</button>
   </view>
 
   <!-- 通用操作 -->

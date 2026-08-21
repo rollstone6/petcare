@@ -63,3 +63,46 @@
   color: var(--text-light);
   padding: 60rpx 0 20rpx;
 }
+
+/* 设置密码表单 */
+.password-form {
+  padding: 24rpx 28rpx;
+}
+
+.form-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--text-color);
+  margin-bottom: 8rpx;
+}
+
+.form-tip {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-bottom: 16rpx;
+}
+
+.form-item {
+  margin: 16rpx 0;
+}
+
+.form-input {
+  background: var(--bg-color, #f7f7f7);
+  border: 1rpx solid var(--border-color, #eee);
+  border-radius: 12rpx;
+  padding: 18rpx 24rpx;
+  font-size: 28rpx;
+}
+
+.form-submit {
+  margin-top: 24rpx;
+  background: var(--primary-color, #07c160);
+  color: #fff;
+  font-size: 28rpx;
+  border-radius: 12rpx;
+}
+
+.form-submit[disabled] {
+  opacity: 0.6;
+  color: #fff;
+}

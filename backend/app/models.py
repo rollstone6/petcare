@@ -143,6 +143,9 @@ class User(Base):
     # 微信登录：小程序 openid（唯一标识微信用户）；unionid 预留（绑定微信开放平台后可跨端识别）
     wx_openid = Column(String(64), unique=True, nullable=True, index=True)
     wx_unionid = Column(String(64), nullable=True)
+    # 是否已设置账密：微信自动注册用户为 False（随机密码用户不知道），
+    # 设置密码后为 True → 该用户即可在 PC/H5 用账密登录，实现全端互通
+    password_set = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=func.now())
 
     favorites = relationship("Favorite", back_populates="user")

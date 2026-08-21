@@ -196,6 +196,12 @@ const bindWechat = (code, options = {}) => {
   return post('/auth/bind-wx', { code }, options)
 }
 
+// 设置/修改账号密码（需带 token）：微信用户设置后即可在 PC/H5 用账密登录同一账号
+// data: { password, username?, old_password? }
+const setPassword = (data, options = {}) => {
+  return post('/auth/set-password', data, options)
+}
+
 // 带自动重试的微信登录（官方规范：code 一次性使用、有效期约 10 分钟）。
 // 首次失败时静默换新 code 重试一次；第二次仍失败则把错误抛给调用方。
 const wxLoginAuto = async (options = {}) => {
@@ -396,6 +402,7 @@ module.exports = {
   wxLoginAuto,
   bindWechat,
   bindWechatAuto,
+  setPassword,
   // 收藏
   getFavorites,
   addFavorite,

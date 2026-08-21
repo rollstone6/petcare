@@ -7,6 +7,8 @@
 4. openid 已绑其他账号时再次绑定 → 400 冲突
 5. 微信返回错误（无效 code）→ 400
 6. /auth/me 返回 has_wx_bind
+7. set-password：微信用户设置账密后可在 PC/H5 登录同一账号（全端互通闭环）
+8. set-password：已有密码用户改密必须验证原密码
 
 运行：cd backend && python -m pytest tests/test_wx_auth.py -v
 """
@@ -146,6 +148,70 @@ def test_me_has_wx_bind_flag(client):
     assert client.get("/api/auth/me", headers=headers).json()["data"]["has_wx_bind"] is False
     client.post("/api/auth/bind-wx", json={"code": "code_f"}, headers=headers)
     assert client.get("/api/auth/me", headers=headers).json()["data"]["has_wx_bind"] is True
+
+
+# ===== 设置/修改密码（微信用户 → PC/H5 互通的最后一环） =====
+
+def test_set_password_for_wx_user_enables_pc_login(client):
+    """场景8：微信自动注册用户设置用户名+密码后，即可在 PC/H5 用账密登录同一账号"""
+    r = client.post("/api/auth/wx-login", json={"code": "code_pw"})
+    data = r.json()["data"]
+    assert data["user"]["has_password"] is False
+
+    headers = {"Authorization": f"Bearer {data['token']}"}
+    # 微信用户无需 old_password，可同时把 wx_xxx 随机名改成好记的用户名
+    r2 = client.post(
+        "/api/auth/set-password",
+        json={"username": "wxuser_pc", "password": "WxPc1234"},
+        headers=headers,
+    )
+    assert r2.status_code == 200, r2.text
+    body = r2.json()["data"]
+    assert body["has_password"] is True
+    assert body["username"] == "wxuser_pc"
+
+    # 用 PC/H5 的账密方式登录：成功且是同一账号（跨端互通闭环）
+    r3 = client.post("/api/auth/login", json={"username": "wxuser_pc", "password": "WxPc1234"})
+    assert r3.status_code == 200, r3.text
+    assert r3.json()["data"]["user"]["id"] == data["user"]["id"]
+
+
+def test_change_password_requires_old_password(client):
+    """场景9：已有密码的用户改密必须验证原密码"""
+    reg = register_and_login(client, username="changepw", password="OldPass123")
+    headers = {"Authorization": f"Bearer {reg['token']}"}
+
+    # 不提供 / 提供错误的原密码 → 400
+    for payload in ({"password": "NewPass456"},
+                    {"password": "NewPass456", "old_password": "wrong"}):
+        r = client.post("/api/auth/set-password", json=payload, headers=headers)
+        assert r.status_code == 400
+
+    # 正确原密码 → 修改成功
+    r = client.post(
+        "/api/auth/set-password",
+        json={"password": "NewPass456", "old_password": "OldPass123"},
+        headers=headers,
+    )
+    assert r.status_code == 200, r.text
+
+    # 旧密码失效，新密码生效
+    assert client.post("/api/auth/login", json={"username": "changepw", "password": "OldPass123"}).status_code == 401
+    assert client.post("/api/auth/login", json={"username": "changepw", "password": "NewPass456"}).status_code == 200
+
+
+def test_set_password_requires_login(client):
+    """场景10：未登录调用 set-password → 401"""
+    r = client.post("/api/auth/set-password", json={"password": "Abcd1234"})
+    assert r.status_code == 401
+
+
+def test_me_includes_has_password(client):
+    """场景11：/auth/me 的 has_password 与实际状态一致"""
+    reg = register_and_login(client, username="meflag", password="Pass1234")
+    me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {reg['token']}"})
+    assert me.status_code == 200
+    assert me.json()["data"]["has_password"] is True
 
 
 # ===== code2session 错误码细分（按微信开放文档《微信登录开发指南》） =====

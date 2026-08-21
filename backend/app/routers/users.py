@@ -38,6 +38,7 @@ class UserInfo(BaseModel):
     nickname: str
     email: Optional[str] = ""
     has_wx_bind: bool = False
+    has_password: bool = False
     model_config = {"from_attributes": True}
 
     @classmethod
@@ -45,7 +46,23 @@ class UserInfo(BaseModel):
         data = cls.model_validate(user).model_dump()
         data["email"] = data["email"] or ""  # 未填邮箱统一输出空串，兼容前端
         data["has_wx_bind"] = bool(user.wx_openid)
+        data["has_password"] = bool(user.password_set)
         return data
+
+
+class SetPasswordRequest(BaseModel):
+    password: str
+    username: Optional[str] = None  # 可选同时改用户名（微信自动注册的 wx_xxx 随机名改成好记的）
+    old_password: Optional[str] = None  # 已有密码的用户改密时必须提供
+
+
+def validate_password(password: str) -> None:
+    """与注册一致的密码强度规则"""
+    import re
+    if len(password) < 8:
+        raise HTTPException(400, "密码至少8位")
+    if not re.search(r"[a-zA-Z]", password) or not re.search(r"\d", password):
+        raise HTTPException(400, "密码需包含字母和数字")
 
 
 # 微信 jscode2session 错误码（参考微信开放文档《微信登录开发指南》）：
@@ -106,11 +123,7 @@ def code2session(code: str) -> dict:
 def register(req: RegisterRequest, db: Session = Depends(get_db)):
     if len(req.username) < 2 or len(req.username) > 20:
         raise HTTPException(400, "用户名长度2-20位")
-    if len(req.password) < 8:
-        raise HTTPException(400, "密码至少8位")
-    import re
-    if not re.search(r"[a-zA-Z]", req.password) or not re.search(r"\d", req.password):
-        raise HTTPException(400, "密码需包含字母和数字")
+    validate_password(req.password)
     if db.query(models.User).filter(models.User.username == req.username).first():
         raise HTTPException(400, "用户名已存在")
 
@@ -119,6 +132,7 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         email=req.email or None,  # 空字符串转为 None，避免 unique 冲突
         nickname=req.username,
         hashed_password=auth.hash_password(req.password),
+        password_set=True,  # 账密注册用户知道自己的密码
     )
     db.add(user)
     try:
@@ -171,6 +185,7 @@ def wx_login(req: WxLoginRequest, db: Session = Depends(get_db)):
             hashed_password=auth.hash_password(secrets.token_urlsafe(24)),
             wx_openid=openid,
             wx_unionid=unionid,
+            password_set=False,  # 随机密码用户不知道；可通过 /auth/set-password 设置后登录 PC/H5
         )
         db.add(user)
         try:
@@ -217,6 +232,44 @@ def bind_wx(
     db.commit()
     db.refresh(user)
     return {"code": 0, "data": UserInfo.from_user(user), "message": "绑定成功"}
+
+
+@router.post("/set-password")
+def set_password(
+    req: SetPasswordRequest,
+    user: models.User = Depends(auth.require_user),
+    db: Session = Depends(get_db),
+):
+    """设置/修改账号密码（需登录）——三端互通的最后一环。
+
+    - 微信自动注册的用户（password_set=False）：设置用户名+密码后，
+      即可在 PC/H5 用账密登录同一账号；
+    - 已有密码的用户改密：必须提供正确的 old_password。
+    """
+    if user.password_set:
+        if not req.old_password or not auth.verify_password(req.old_password, user.hashed_password):
+            raise HTTPException(400, "原密码错误")
+
+    validate_password(req.password)
+
+    # 可选：同时修改用户名（把 wx_xxx 随机名改成好记的）
+    if req.username and req.username.strip() != user.username:
+        name = req.username.strip()
+        if len(name) < 2 or len(name) > 20:
+            raise HTTPException(400, "用户名长度2-20位")
+        if db.query(models.User).filter(models.User.username == name).first():
+            raise HTTPException(400, "用户名已存在")
+        user.username = name
+
+    user.hashed_password = auth.hash_password(req.password)
+    user.password_set = True
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(400, "用户名已被占用，请更换后重试")
+    db.refresh(user)
+    return {"code": 0, "data": UserInfo.from_user(user), "message": "设置成功"}
 
 
 @router.get("/me")

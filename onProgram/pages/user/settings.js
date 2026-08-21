@@ -4,13 +4,25 @@ const app = getApp()
 
 const APP_VERSION = '1.0.0'
 
+function toast(msg, icon = 'none') {
+  wx.showToast({ title: msg, icon, duration: 2500 })
+}
+
 Page({
   data: {
     version: APP_VERSION,
     isLogin: false,
     username: '',
     hasWxBind: false,
-    binding: false
+    binding: false,
+    hasPassword: false,
+    // 设置/修改密码表单
+    showPasswordForm: false,
+    submitting: false,
+    newUsername: '',
+    oldPassword: '',
+    newPassword: '',
+    confirmPassword: ''
   },
 
   onShow() {
@@ -18,7 +30,8 @@ Page({
     this.setData({
       isLogin,
       username: app.globalData.userInfo?.username || '',
-      hasWxBind: !!app.globalData.userInfo?.has_wx_bind
+      hasWxBind: !!app.globalData.userInfo?.has_wx_bind,
+      hasPassword: !!app.globalData.userInfo?.has_password
     })
   },
 
@@ -43,6 +56,56 @@ Page({
       wx.showToast({ title: err.message || '绑定失败', icon: 'none' })
     } finally {
       this.setData({ binding: false })
+    }
+  },
+
+  // ===== 设置/修改账号密码 =====
+
+  onTogglePasswordForm() {
+    if (!app.globalData.isLogin) {
+      wx.navigateTo({ url: '/pages/user/login' })
+      return
+    }
+    this.setData({ showPasswordForm: !this.data.showPasswordForm })
+  },
+
+  onNewUsernameInput(e) { this.setData({ newUsername: e.detail.value }) },
+  onOldPasswordInput(e) { this.setData({ oldPassword: e.detail.value }) },
+  onNewPasswordInput(e) { this.setData({ newPassword: e.detail.value }) },
+  onConfirmPasswordInput(e) { this.setData({ confirmPassword: e.detail.value }) },
+
+  async onSubmitPassword() {
+    const { hasPassword, oldPassword, newPassword, confirmPassword, newUsername, submitting } = this.data
+    if (submitting) return
+
+    if (hasPassword && !oldPassword) { toast('请输入原密码'); return }
+    if (newPassword.length < 8 || !/[a-zA-Z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      toast('新密码至少8位且包含字母和数字')
+      return
+    }
+    if (newPassword !== confirmPassword) { toast('两次输入的密码不一致'); return }
+
+    this.setData({ submitting: true })
+    try {
+      const payload = { password: newPassword }
+      if (!hasPassword && newUsername.trim()) payload.username = newUsername.trim()
+      if (hasPassword) payload.old_password = oldPassword
+      const res = await api.setPassword(payload, { silent: true })
+      app.globalData.userInfo = res
+      this.setData({
+        hasPassword: true,
+        showPasswordForm: false,
+        username: res.username || this.data.username,
+        newUsername: '',
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+      wx.showToast({ title: hasPassword ? '密码已修改' : '设置成功', icon: 'success' })
+    } catch (err) {
+      wx.showToast({ title: err.message || '设置失败', icon: 'none' })
+    } finally {
+      this.setData({ submitting: false })
     }
   },
 

@@ -50,6 +50,16 @@ def migrate():
     if cursor.rowcount:
         print(f"✅ 已把 {cursor.rowcount} 条空邮箱记录订正为 NULL")
 
+    # password_set：标记"用户是否知道自己的密码"。
+    # 迁移时点存量用户全部是账密注册的 → 一律标记 1；
+    # 之后微信自动注册的新用户由模型默认 False，设置密码后置 True
+    if "password_set" in columns:
+        print("password_set 列已存在，跳过")
+    else:
+        cursor.execute("ALTER TABLE users ADD COLUMN password_set BOOLEAN NOT NULL DEFAULT 0")
+        cursor.execute("UPDATE users SET password_set = 1")
+        print(f"✅ password_set 列已添加，{cursor.rowcount} 位存量用户标记为已设密码")
+
     conn.commit()
     conn.close()
     print("✅ 微信登录字段迁移完成:", DB_PATH)
