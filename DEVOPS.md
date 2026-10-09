@@ -41,9 +41,10 @@ PetCare 采用轻量级 DevOps 方案，核心特性：
 ├── .github/workflows/    # CI/CD 配置
 ├── scripts/              # 运维脚本
 │   ├── backup.sh         # 数据库备份
-│   ├── health-check.sh   # 健康检查
-│   ├── rollback.sh       # 一键回滚
-│   └── sync-deploy.sh    # 手动同步
+│   ├── petcare-maintenance.sh  # 综合维护（计划检查+同步部署+健康监控）
+│   ├── plan-check.py     # 计划检查（数据库/构建/头像）
+│   ├── sync-deploy.sh    # 同步部署（构建+重启+提交推送）
+│   └── rollback.sh       # 一键回滚
 ├── backend/              # FastAPI 后端
 ├── frontend/             # React 前端
 └── logs/                 # 应用日志
@@ -124,21 +125,29 @@ sudo systemctl start petcare.service
 
 ## 健康监控
 
-### 监控项目
-- ✅ systemd 服务状态
-- ✅ API 响应时间
-- ✅ 数据库连接
-- ✅ 磁盘使用率
+### 监控项目（petcare-monitor.py）
+- ✅ Nginx 进程状态
+- ✅ 后端 API 基础连通性
+- ✅ 前端页面 HTTPS 访问
+- ✅ 商品/品牌/分类/品种数据完整性
+- ✅ 商品图片可访问性
+- ✅ SSL 证书有效期
+- ✅ API 响应速度
+- ✅ HTTPS 代理功能
 
 ### 手动检查
 ```bash
-cd /root/workspace/petcare
-./scripts/health-check.sh
+# 综合维护（包含健康监控）
+bash /root/workspace/petcare/scripts/petcare-maintenance.sh
+
+# 单独运行健康监控
+python3 /root/.hermes/scripts/petcare-monitor.py
 ```
 
-### 告警阈值
-- 连续失败 **3次** 触发微信告警
-- 状态文件: `/tmp/petcare_health_state`
+### 告警机制
+- 发现问题时自动尝试重启后端服务
+- 输出详细的问题报告
+- 集成到每日总结推送（每天 8:00）
 
 ## 一键回滚
 
