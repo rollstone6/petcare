@@ -2,7 +2,7 @@
 import secrets
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -10,6 +10,8 @@ from typing import Optional
 from app.database import get_db
 from app import models, auth
 from app.config import settings
+from app.login_guard import check_locked, record_failure, record_success
+from app.ai_quota import client_ip
 
 router = APIRouter(prefix="/auth", tags=["用户"])
 
@@ -143,17 +145,22 @@ def register(req: RegisterRequest, db: Session = Depends(get_db)):
         raise HTTPException(400, "注册信息冲突，请更换用户名后重试")
     db.refresh(user)
 
-    token = auth.create_access_token({"sub": str(user.id)})
+    token = auth.create_access_token({"sub": str(user.id), "tv": user.token_version or 0})
     return {"code": 0, "data": {"token": token, "user": UserInfo.from_user(user)}, "message": "注册成功"}
 
 
 @router.post("/login")
-def login(req: LoginRequest, db: Session = Depends(get_db)):
+def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    # 安全审计 2026-10：失败锁定 —— 同 IP+用户名连续失败5次锁15分钟，同IP累计20次锁30分钟
+    ip = client_ip(request)
+    check_locked(ip, req.username)
     user = db.query(models.User).filter(models.User.username == req.username).first()
     if not user or not auth.verify_password(req.password, user.hashed_password):
+        record_failure(ip, req.username)
         raise HTTPException(401, "用户名或密码错误")
+    record_success(ip, req.username)
 
-    token = auth.create_access_token({"sub": str(user.id)})
+    token = auth.create_access_token({"sub": str(user.id), "tv": user.token_version or 0})
     return {"code": 0, "data": {"token": token, "user": UserInfo.from_user(user)}, "message": "登录成功"}
 
 
@@ -200,7 +207,7 @@ def wx_login(req: WxLoginRequest, db: Session = Depends(get_db)):
         user.wx_unionid = unionid
         db.commit()
 
-    token = auth.create_access_token({"sub": str(user.id)})
+    token = auth.create_access_token({"sub": str(user.id), "tv": user.token_version or 0})
     return {
         "code": 0,
         "data": {"token": token, "user": UserInfo.from_user(user), "is_new": is_new},
@@ -263,13 +270,19 @@ def set_password(
 
     user.hashed_password = auth.hash_password(req.password)
     user.password_set = True
+    # 安全审计 2026-10：改密即吊销所有旧 token（token_version+1），并下发新 token 无感续期
+    user.token_version = (user.token_version or 0) + 1
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
         raise HTTPException(400, "用户名已被占用，请更换后重试")
     db.refresh(user)
-    return {"code": 0, "data": UserInfo.from_user(user), "message": "设置成功"}
+    token = auth.create_access_token({"sub": str(user.id), "tv": user.token_version})
+    user_info = UserInfo.from_user(user)
+    if isinstance(user_info, dict):
+        user_info["token"] = token  # 小程序 api 封装只透传 data，token 需放这里
+    return {"code": 0, "data": user_info, "token": token, "message": "设置成功"}
 
 
 @router.get("/me")

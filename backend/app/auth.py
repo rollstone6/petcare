@@ -48,6 +48,11 @@ def get_current_user(
         if user_id is None:
             return None
         user = db.query(models.User).filter(models.User.id == int(user_id)).first()
+        if user is None:
+            return None
+        # 安全审计 2026-10：token_version 吊销机制 —— 改密/重置后旧 token 立即失效
+        if int(payload.get("tv", 0)) != (user.token_version or 0):
+            return None
         return user
     except JWTError:
         return None

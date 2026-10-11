@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-import urllib.request, json, os, yaml
+import urllib.request, json, os
 
 router = APIRouter(prefix="/health", tags=["健康计算器"])
 
@@ -144,13 +144,8 @@ def calc_growth_curve(weight_kg, age_months, size, species):
 # ── AI 推荐 ──
 
 def get_ark_key():
-    config_path = os.path.expanduser("~/.hermes/config.yaml")
-    try:
-        with open(config_path) as f:
-            config = yaml.safe_load(f)
-        return config.get("model", {}).get("api_key", "")
-    except Exception:
-        return ""
+    from app.config import settings
+    return settings.ark_api_key
 
 
 def ai_recommend(breed, species, age_months, weight_kg, size, calcium, joint):

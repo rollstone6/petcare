@@ -91,6 +91,8 @@ Page({
       if (!hasPassword && newUsername.trim()) payload.username = newUsername.trim()
       if (hasPassword) payload.old_password = oldPassword
       const res = await api.setPassword(payload, { silent: true })
+      // 安全审计 2026-10：改密后旧 token 已被吊销（token_version+1），立即换发新 token
+      if (res && res.token) api.setToken(res.token)
       app.globalData.userInfo = res
       this.setData({
         hasPassword: true,

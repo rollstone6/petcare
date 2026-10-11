@@ -32,17 +32,10 @@ from app.database import SessionLocal
 logger = logging.getLogger(__name__)
 
 
-# 复用现有火山引擎 ARK API 配置（与 ai.py 相同）
+# 安全审计 2026-10：不再读取 ~/.hermes/config.yaml，仅从 settings(ARK_API_KEY) 取值
 def _get_ark_config():
-    """从 hermes 配置读取 API key"""
-    import yaml
-    config_path = os.path.expanduser("~/.hermes/config.yaml")
-    try:
-        with open(config_path) as f:
-            config = yaml.safe_load(f)
-        return config.get("model", {}).get("api_key", ""), os.getenv("ARK_API_KEY", "")
-    except Exception:
-        return os.getenv("ARK_API_KEY", "")
+    from app.config import settings
+    return settings.ark_api_key or os.getenv("ARK_API_KEY", "")
 
 
 # 火山引擎 ARK 多模态端点（兼容 OpenAI 格式）
@@ -56,8 +49,7 @@ class IngredientExtractor:
     
     def __init__(self, api_key: str = None):
         if api_key is None:
-            ark_key, env_key = _get_ark_config()
-            api_key = ark_key or env_key
+            api_key = _get_ark_config()
         self.api_key = api_key
         self.client = httpx.AsyncClient(timeout=60.0)
         
@@ -415,7 +407,7 @@ async def main():
     """主函数 - 示例用法"""
     import sys
     
-    # API key 自动从 ~/.hermes/config.yaml 或 ARK_API_KEY 环境变量加载
+    # API key 自动从 ARK_API_KEY 环境变量(.env)加载
     # 也可以通过环境变量手动指定：export PETCARE_VLM_API_KEY=xxx
     
     # 获取 SKU ID

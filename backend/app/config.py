@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     # 微信小程序登录（wx.login code2session），从 .env 注入，勿提交明文
     wx_appid: str = ""
     wx_app_secret: str = ""
+    # 火山方舟 AI 密钥：仅从 .env 注入（安全审计 2026-10：不再读取 ~/.hermes/config.yaml，
+    # 避免 Web 进程能触达 Hermes 全局凭据）
+    ark_api_key: str = ""
 
     class Config:
         env_file = ".env"

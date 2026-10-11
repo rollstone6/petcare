@@ -146,6 +146,8 @@ class User(Base):
     # 是否已设置账密：微信自动注册用户为 False（随机密码用户不知道），
     # 设置密码后为 True → 该用户即可在 PC/H5 用账密登录，实现全端互通
     password_set = Column(Boolean, default=False, nullable=False)
+    # token 版本号：改密/重置 +1，签发 JWT 带 tv，验证不匹配即失效（旧 token 吊销）
+    token_version = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=func.now())
 
     favorites = relationship("Favorite", back_populates="user")

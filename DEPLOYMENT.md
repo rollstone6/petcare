@@ -18,6 +18,11 @@
 
 ### 1. 启动后端 API 服务
 
+> 服务由 systemd 管理：`systemctl restart petcare`（生产环境实际方式）。
+> 配置通过 `backend/.env` 注入（pydantic-settings 自动加载，工作目录即 backend/）。
+> 模板见 `backend/.env.example`，必配项：`JWT_SECRET`、`ARK_API_KEY`（AI 功能）、`WX_APPID`/`WX_APP_SECRET`（小程序登录）。
+> 安全审计 2026-10：AI 密钥只从 .env 读取，Web 进程不再触碰 `~/.hermes/config.yaml`。
+
 ```bash
 cd /root/workspace/petcare/backend
 source venv/bin/activate

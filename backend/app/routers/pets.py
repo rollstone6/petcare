@@ -83,6 +83,16 @@ def list_pets(
     return {"code": 0, "data": {"items": items}}
 
 
+
+def _validate_avatar_url(url: str | None) -> str | None:
+    """安全审计 2026-10：头像 URL 仅允许 https/http 协议，防 javascript:/data: 注入。"""
+    if url is None or url == "":
+        return url
+    if not url.lower().startswith(("http://", "https://", "/")):
+        raise HTTPException(400, "头像链接必须是 http(s) 地址或站内相对路径")
+    return url
+
+
 @router.post("")
 def create_pet(
     req: PetCreate,
@@ -99,7 +109,7 @@ def create_pet(
         age=req.age or "",
         gender=req.gender or "",
         weight=req.weight,
-        avatar_url=req.avatar_url or "",
+        avatar_url=_validate_avatar_url(req.avatar_url) or "",
         birthday=req.birthday,
         body_condition=req.body_condition or "",
         health_tags=json.dumps(req.health_tags or []),
@@ -177,7 +187,7 @@ def update_pet(
     if req.weight is not None:
         pet.weight = req.weight
     if req.avatar_url is not None:
-        pet.avatar_url = req.avatar_url
+        pet.avatar_url = _validate_avatar_url(req.avatar_url)
     if req.birthday is not None:
         pet.birthday = req.birthday
     if req.body_condition is not None:

@@ -2,26 +2,20 @@
 import logging
 from fastapi import APIRouter, HTTPException, Depends, File, UploadFile
 from pydantic import BaseModel
-import urllib.request, json, os, yaml
+import urllib.request, json, os
 
-from app.auth import get_current_user
+from app.ai_quota import require_ai_quota
+from app.config import settings
 from app import models
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai", tags=["AI问答"])
 
-# 从 hermes 配置读取 API key
-def _get_ark_key():
-    config_path = os.path.expanduser("~/.hermes/config.yaml")
-    try:
-        with open(config_path) as f:
-            config = yaml.safe_load(f)
-        return config.get("model", {}).get("api_key", "")
-    except Exception:
-        return os.getenv("ARK_API_KEY", "")
-
-ARK_KEY = _get_ark_key()
+# 安全审计 2026-10：密钥仅从 .env 注入（settings.ark_api_key），
+# 不再读取 ~/.hermes/config.yaml —— Web 进程不应能触达 Hermes 全局凭据。
+def _ark_key():
+    return settings.ark_api_key
 ARK_URL = "https://ark.cn-beijing.volces.com/api/v3/chat/completions"
 
 SYSTEM_PROMPT = """你是宠物宝(PetCare)的AI助手，专门解答宠物药品、食品、保健品相关问题。
@@ -44,9 +38,10 @@ class AskRequest(BaseModel):
 @router.post("/ask")
 async def ask(
     req: AskRequest,
-    user: models.User = Depends(get_current_user),
+    user=Depends(require_ai_quota),
 ):
     """AI 问答（建议登录，未登录限频）"""
+    ARK_KEY = _ark_key()
     if not ARK_KEY:
         raise HTTPException(500, "AI 服务未配置")
 
@@ -88,9 +83,10 @@ class AnalyzeIngredientsRequest(BaseModel):
 @router.post("/analyze-ingredients")
 async def analyze_ingredients(
     req: AnalyzeIngredientsRequest,
-    user: models.User = Depends(get_current_user),
+    user=Depends(require_ai_quota),
 ):
     """AI 分析配料表安全性"""
+    ARK_KEY = _ark_key()
     if not ARK_KEY:
         raise HTTPException(500, "AI 服务未配置")
 
@@ -162,7 +158,7 @@ async def analyze_ingredients(
 
 
 @router.post("/parse-ingredient-image")
-async def parse_ingredient_image(file: UploadFile = File(None)):
+async def parse_ingredient_image(file: UploadFile = File(None), user=Depends(require_ai_quota)):
     """
     使用多模态 VLM 解析配料表图片
     
@@ -174,20 +170,26 @@ async def parse_ingredient_image(file: UploadFile = File(None)):
     if not file:
         raise HTTPException(400, "请上传图片文件")
     
-    # 检查文件类型
+    # 检查文件类型（声明 + 实际字节双重校验，防伪造 content_type）
     if not file.content_type or not file.content_type.startswith("image/"):
         raise HTTPException(400, "只支持图片文件")
-    
+
     # 保存临时文件
     import tempfile
     from pathlib import Path
+
+    content = await file.read()
+    if len(content) > 8 * 1024 * 1024:
+        raise HTTPException(413, "图片不能超过 8MB")
+    _MAGIC = (b"\xff\xd8", b"\x89PNG", b"GIF8", b"RIFF")  # jpg / png / gif / webp
+    if not any(content.startswith(m) for m in _MAGIC):
+        raise HTTPException(400, "文件内容不是有效图片")
     
     suffix = ".jpg"
     if file.filename and "." in file.filename:
         suffix = "." + file.filename.rsplit(".", 1)[-1].lower()
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        content = await file.read()
         tmp.write(content)
         tmp_path = Path(tmp.name)
     
