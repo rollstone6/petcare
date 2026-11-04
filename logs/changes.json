@@ -1,12 +1,7 @@
 {
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "items": [
     "构建文件过期，建议重新构建"
   ],
-  "last_stats": {
-    "products": 277,
-    "brands": 50,
-    "categories": 40,
-    "ingredients": 139
-  }
+  "last_stats": null
 }
